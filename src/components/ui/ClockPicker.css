@@ -1,0 +1,151 @@
+/* ─── Time Picker Container ─── */
+.tp-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+  background: rgba(255, 255, 255, 0.04);
+  padding: var(--space-3);
+  border-radius: var(--radius-xl);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* ─── Digital Display ─── */
+.tp-display {
+  width: 100%;
+  text-align: center;
+  padding: var(--space-2) var(--space-3);
+  background: linear-gradient(135deg, var(--primary-600), var(--primary-500));
+  border-radius: var(--radius-lg);
+  box-shadow: 0 4px 16px rgba(220, 38, 38, 0.25);
+}
+.tp-display-time {
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+  font-weight: 800;
+  color: white;
+  letter-spacing: 0.08em;
+}
+
+/* ─── Columns Layout ─── */
+.tp-columns {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-1);
+  width: 100%;
+}
+
+.tp-column {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.tp-column-ampm {
+  flex: 0.6;
+}
+
+.tp-column-label {
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  color: var(--neutral-400);
+  margin-bottom: var(--space-1);
+  text-transform: uppercase;
+}
+
+/* ─── Scroll Area ─── */
+.tp-scroll {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  max-height: 140px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  width: 100%;
+  padding: 2px;
+  scroll-behavior: smooth;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(220, 38, 38, 0.2) transparent;
+}
+
+.tp-scroll::-webkit-scrollbar { width: 3px; }
+.tp-scroll::-webkit-scrollbar-thumb {
+  background: rgba(220, 38, 38, 0.2);
+  border-radius: 3px;
+}
+.tp-scroll::-webkit-scrollbar-track { background: transparent; }
+
+.tp-scroll-ampm {
+  max-height: none;
+  overflow: visible;
+}
+
+/* ─── Items ─── */
+.tp-item {
+  width: 100%;
+  padding: 6px 4px;
+  border: none;
+  border-radius: var(--radius-md);
+  background: transparent;
+  font-size: var(--text-sm);
+  font-weight: 700;
+  color: var(--neutral-600);
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  text-align: center;
+  position: relative;
+  font-variant-numeric: tabular-nums;
+}
+
+[data-theme="dark"] .tp-item {
+  color: var(--neutral-400);
+}
+
+.tp-item:hover:not(:disabled) {
+  background: rgba(220, 38, 38, 0.08);
+  color: var(--primary-500);
+  transform: scale(1.05);
+}
+
+.tp-item-active {
+  background: var(--primary-600) !important;
+  color: white !important;
+  box-shadow: 0 2px 8px rgba(220, 38, 38, 0.35);
+  transform: scale(1.08);
+}
+
+.tp-item-disabled {
+  opacity: 0.2;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.tp-item-period {
+  font-size: 11px;
+  letter-spacing: 0.06em;
+}
+
+/* ─── Divider ─── */
+.tp-divider {
+  font-size: var(--text-xl);
+  font-weight: 800;
+  color: var(--neutral-300);
+  padding-top: 26px;
+  line-height: 1;
+  user-select: none;
+}
+[data-theme="dark"] .tp-divider {
+  color: var(--neutral-600);
+}
+
+/* ─── Dark Mode ─── */
+[data-theme="dark"] .tp-container {
+  background: rgba(255, 255, 255, 0.02);
+  border-color: rgba(255, 255, 255, 0.06);
+}
+
+[data-theme="dark"] .tp-display {
+  background: linear-gradient(135deg, var(--primary-700), var(--primary-600));
+  box-shadow: 0 4px 16px rgba(220, 38, 38, 0.2);
+}

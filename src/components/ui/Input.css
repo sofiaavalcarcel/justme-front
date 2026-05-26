@@ -1,0 +1,123 @@
+.input-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  background: var(--neutral-0);
+  border: 1.5px solid var(--neutral-200);
+  border-radius: var(--radius-xl);
+  transition: all var(--transition-base);
+}
+
+.input-wrapper:hover {
+  border-color: var(--neutral-300);
+}
+
+.input-focused {
+  border-color: var(--primary-500) !important;
+  box-shadow: 0 0 0 3px rgba(139,69,255,0.1);
+}
+
+.input-field {
+  width: 100%;
+  padding: var(--space-4) var(--space-4);
+  background: transparent;
+  border: none;
+  outline: none;
+  font-size: var(--text-base);
+  color: var(--neutral-900);
+}
+
+.input-field.has-icon-left { padding-left: var(--space-10); }
+.input-field.has-icon-right { padding-right: var(--space-10); }
+
+.input-label {
+  position: absolute;
+  left: var(--space-4);
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: var(--text-base);
+  color: var(--neutral-400);
+  pointer-events: none;
+  transition: all var(--transition-fast);
+  background: var(--neutral-0);
+  padding: 0 var(--space-1);
+}
+
+[data-theme="dark"] .input-label {
+  background: #0f172a !important; /* Forzamos fondo oscuro base */
+  color: #94a3b8 !important;
+}
+
+.has-icon-left ~ .input-label {
+  left: var(--space-10);
+}
+
+.input-label-float {
+  top: 0;
+  font-size: var(--text-xs);
+  color: var(--primary-500);
+}
+
+[data-theme="dark"] .input-label-float {
+  background: #0a0f1e !important; /* Fondo específico del modal para el label flotante */
+  color: #ff3333 !important;
+}
+
+.input-icon-left, .input-icon-right {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  color: var(--neutral-400);
+  transition: color var(--transition-fast);
+}
+
+[data-theme="dark"] .input-icon-left, 
+[data-theme="dark"] .input-icon-right {
+  color: var(--neutral-500);
+}
+
+.input-icon-left { left: var(--space-3); }
+.input-icon-right { right: var(--space-3); }
+
+.input-focused .input-icon-left,
+.input-focused .input-icon-right {
+  color: var(--primary-500);
+}
+
+[data-theme="dark"] .input-focused .input-icon-left,
+[data-theme="dark"] .input-focused .input-icon-right {
+  color: #ff3333;
+}
+
+/* Dark mode overrides for the field */
+[data-theme="dark"] .input-field {
+  color: #ffffff;
+}
+
+[data-theme="dark"] .input-wrapper {
+  background: rgba(255, 255, 255, 0.03);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+[data-theme="dark"] .input-wrapper:hover {
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+/* Error state */
+.input-error .input-wrapper {
+  border-color: var(--error-400);
+}
+.input-error .input-focused {
+  box-shadow: 0 0 0 3px rgba(239,68,68,0.1);
+}
+.input-error-text {
+  font-size: var(--text-xs);
+  color: var(--error-500);
+  padding-left: var(--space-2);
+}

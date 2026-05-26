@@ -1,0 +1,718 @@
+/* ================================================================
+   Register.css — Composición artística tipo Belissa (Final Polish)
+   Full-viewport: 3 capas (bg botanical → wave blanca → fg botanical)
+   Paleta JustMe: Vermilion Red + Amber Gold + Dark Navy
+   ================================================================ */
+
+/* ─── PAGE: Lienzo Belissa ─── */
+.rg-page {
+  --flora-red: #ff0000;
+  --flora-amber: #f59e0b;
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  background: white;
+  transition: background 0.5s ease;
+}
+
+[data-theme="dark"] .rg-page {
+  background: #0a0f1e; /* Deep Midnight */
+  --flora-red: #ff1a1a;
+}
+
+/* Grano de ruido para textura premium */
+.rg-page::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  opacity: 0.04;
+  pointer-events: none;
+  z-index: 10;
+}
+
+/* ─── CAPAS ─── */
+.rg-bg-layer {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.rg-organic-shell {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  padding-left: 6vw;
+}
+
+.rg-flora-new {
+  position: absolute;
+  inset: 0;
+}
+
+.rg-circle {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+  filter: drop-shadow(0 0 10px rgba(255, 0, 0, 0.05));
+}
+
+.rg-flora {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+/* ─── WAVE SYSTEM (Belissa Multi-layer) ─── */
+.rg-wave-container {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.rg-wave-svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.rg-wave-svg path {
+  transition: fill 0.5s ease, opacity 0.5s ease;
+}
+
+[data-theme="dark"] .rg-wave-svg path {
+  fill: #0a0f1e !important;
+}
+
+[data-theme="dark"] .wave-1 path { opacity: 0.1 !important; }
+[data-theme="dark"] .wave-2 path { opacity: 0.2 !important; }
+[data-theme="dark"] .wave-3 path { opacity: 0.3 !important; }
+[data-theme="dark"] .wave-main path { opacity: 0.9 !important; }
+
+.rg-wave-svg.wave-main {
+  filter: drop-shadow(40px 0 80px rgba(0,0,0,0.08));
+}
+
+[data-theme="dark"] .rg-wave-svg.wave-main {
+  filter: drop-shadow(40px 0 100px rgba(0,0,0,0.6));
+}
+
+/* ─── FORM INNER ─── */
+.rg-form-inner {
+  position: relative;
+  z-index: 2;
+  width: min(480px, 42vw);
+  animation: rgFadeUp 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes rgFadeUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.login-form-container {
+  width: 100%;
+  padding: 0;
+}
+
+/* ─── BRAND / LOGO ─── */
+.login-back-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  text-decoration: none;
+  margin-bottom: 1.5rem;
+}
+
+.nav-logo-icon {
+  width: 38px; height: 38px;
+  background: linear-gradient(135deg, #ef4444, #b91c1c);
+  border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(239,68,68,0.2);
+}
+
+.nav-logo-text {
+  font-size: 1.5rem;
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  background: linear-gradient(135deg, #ef4444, #b91c1c);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent !important;
+}
+
+/* ─── TÍTULOS EDITORIALES ─── */
+.login-form-container h1 {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #111827;
+  letter-spacing: -0.025em;
+  margin-bottom: 0.375rem;
+  line-height: 1.2;
+}
+
+.login-subtitle {
+  font-size: 0.875rem;
+  color: #6b7280;
+  margin-bottom: 1.75rem;
+  line-height: 1.5;
+}
+
+/* ─── PROGRESS STEPPER ─── */
+.register-progress {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 1.75rem;
+  position: relative;
+}
+
+.register-progress::before {
+  content: '';
+  position: absolute;
+  top: 16px;
+  left: 34px;
+  right: 34px;
+  height: 2px;
+  background: #e5e7eb;
+  z-index: 0;
+}
+
+.progress-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  z-index: 1;
+  flex: 1;
+}
+
+.progress-dot {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f3f4f6;
+  color: #9ca3af;
+  font-size: 0.8rem;
+  font-weight: 700;
+  transition: all 0.3s ease;
+  border: 2px solid transparent;
+}
+
+.progress-active .progress-dot {
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+  color: #fff;
+  box-shadow: 0 4px 14px rgba(239,68,68,0.40);
+}
+
+.progress-done .progress-dot {
+  background: #10b981;
+  color: #fff;
+  box-shadow: 0 4px 10px rgba(16,185,129,0.30);
+}
+
+.progress-label {
+  font-family: var(--font-display);
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--neutral-400);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.progress-active .progress-label {
+  color: #dc2626;
+  font-weight: 600;
+}
+
+/* ─── ROLE CARDS (Compactas y elegantes) ─── */
+.role-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+}
+
+.role-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  padding: 1.1rem 1.25rem;
+  border: 2px solid #e5e7eb;
+  border-radius: 18px;
+  cursor: pointer;
+  transition: all 0.22s ease;
+  background: #fff;
+}
+
+.role-card:hover {
+  border-color: #ef4444;
+  background: #fef2f2;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(239,68,68,0.12);
+}
+
+.role-card-active {
+  border-color: #ef4444;
+  background: linear-gradient(135deg, rgba(239,68,68,0.05), rgba(185,28,28,0.03));
+  box-shadow: 0 8px 20px rgba(239,68,68,0.15);
+}
+
+.role-card-emoji {
+  font-size: 1.75rem;
+  margin-bottom: 0.35rem;
+  display: flex;
+  align-items: center;
+  color: #dc2626;
+}
+
+.role-card h3 {
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: #111827;
+}
+
+.role-card p {
+  font-size: 0.75rem;
+  color: var(--neutral-500);
+  line-height: 1.4;
+}
+
+.step-question {
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--neutral-800);
+  margin-bottom: 1rem;
+}
+
+/* ─── FORM ELEMENTS ─── */
+.register-step {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.register-step label {
+  font-family: var(--font-display);
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--neutral-700);
+  margin-bottom: 0.4rem;
+  display: block;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  transition: all var(--transition-base);
+}
+
+/* Specific overrides for floating labels in Register to make them more premium */
+.register-step .input-label {
+  font-family: var(--font-display);
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  color: var(--neutral-500);
+}
+
+.register-step .input-label-float {
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  color: var(--primary-500);
+}
+
+[data-theme="dark"] .register-step label {
+  color: var(--primary-400);
+  text-shadow: 0 0 12px rgba(239, 68, 68, 0.2);
+}
+
+.register-step .input-wrapper {
+  border-radius: 13px !important;
+  border: 1.5px solid #e5e7eb !important;
+  background: #fff !important;
+  transition: all 0.2s ease;
+}
+
+.register-step .input-wrapper:focus-within {
+  border-color: #ef4444 !important;
+  box-shadow: 0 0 0 3px rgba(239,68,68,0.10) !important;
+}
+
+.register-step select {
+  width: 100%;
+  padding: 0.7rem 0.9rem;
+  border-radius: 13px;
+  border: 1.5px solid #e5e7eb;
+  background: #fff;
+  font-size: 0.875rem;
+  color: #111827;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  appearance: auto;
+}
+
+/* ─── BOTONES ─── */
+.register-actions {
+  display: flex;
+  justify-content: center;
+  gap: 0.875rem;
+  margin-top: 1.5rem;
+}
+
+.register-actions button:last-child {
+  background: linear-gradient(135deg, #ef4444 0%, #d97706 100%) !important;
+  border: none !important;
+  color: #fff !important;
+  border-radius: 40px !important;
+  font-weight: 700 !important;
+  box-shadow: 0 4px 16px rgba(239,68,68,0.38) !important;
+  transition: all 0.22s ease !important;
+}
+
+.register-actions button:last-child:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(239,68,68,0.48) !important;
+}
+
+.register-actions button:first-child {
+  background: transparent !important;
+  border: 1.5px solid #e5e7eb !important;
+  color: #6b7280 !important;
+  border-radius: 40px !important;
+  font-weight: 600 !important;
+  transition: all 0.2s ease !important;
+}
+
+.login-signup {
+  margin-top: 1.5rem;
+  font-size: 0.85rem;
+  color: #64748b;
+}
+
+.login-signup a { color: #ef4444; font-weight: 700; text-decoration: none; }
+
+/* ─── DARK MODE — Refinado Premium ─── */
+
+/* La wave en dark mode: más profunda y con glow rojo vibrante */
+[data-theme="dark"] .rg-wave-svg path {
+  fill: rgba(15, 23, 42, 0.9); /* Un poco más opaco */
+  stroke: rgba(239, 68, 68, 0.3); /* Contorno de luz roja sutil */
+  stroke-width: 1px;
+}
+
+[data-theme="dark"] .rg-wave-svg {
+  filter:
+    drop-shadow(0 40px 100px rgba(0,0,0,0.8))
+    drop-shadow(0 0 40px rgba(239, 68, 68, 0.25));
+}
+
+[data-theme="dark"] .rg-organic-shell {
+  background: transparent; /* No tapar el fondo artístico */
+}
+
+/* Tipografía y Textos */
+[data-theme="dark"] .login-form-container h1 { color: var(--neutral-900); }
+[data-theme="dark"] .login-subtitle { color: var(--neutral-500); }
+[data-theme="dark"] .step-question { color: var(--neutral-900); }
+
+/* Progress Stepper */
+[data-theme="dark"] .register-progress::before { background: var(--neutral-200); }
+[data-theme="dark"] .progress-dot {
+  background: var(--surface-elevated);
+  color: var(--neutral-400);
+  border-color: var(--neutral-200);
+}
+[data-theme="dark"] .progress-active .progress-dot {
+  background: linear-gradient(135deg, var(--primary-500), var(--primary-600));
+  box-shadow: 0 0 15px rgba(239, 68, 68, 0.3);
+  border-color: transparent;
+}
+
+/* Role Cards: Glassmorphism */
+[data-theme="dark"] .role-card {
+  background: rgba(255, 255, 255, 0.03) !important;
+  backdrop-filter: blur(10px);
+  border-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+[data-theme="dark"] .role-card h3 { color: var(--neutral-900); }
+[data-theme="dark"] .role-card p { color: var(--neutral-400); }
+
+[data-theme="dark"] .role-card-active {
+  border-color: var(--primary-500) !important;
+  background: rgba(239, 68, 68, 0.15) !important;
+  box-shadow: 0 0 25px rgba(239, 68, 68, 0.25) !important;
+}
+
+[data-theme="dark"] .role-card-active h3 {
+  color: var(--primary-400) !important;
+}
+
+[data-theme="dark"] .role-card:hover {
+  background: rgba(239, 68, 68, 0.1);
+  border-color: var(--primary-500);
+  box-shadow: 0 8px 25px rgba(0,0,0,0.4);
+}
+
+/* Inputs y Selects */
+[data-theme="dark"] .register-step .input-wrapper {
+  background: rgba(15, 23, 42, 0.6) !important; /* Cristal oscuro */
+  border-color: rgba(255, 255, 255, 0.1) !important;
+  color: var(--neutral-900) !important;
+  backdrop-filter: blur(4px);
+}
+
+[data-theme="dark"] .register-step label {
+  background: transparent !important;
+  color: var(--primary-400);
+  text-shadow: 0 0 10px rgba(239, 68, 68, 0.25);
+  font-weight: 700;
+  letter-spacing: 0.8px;
+}
+
+[data-theme="dark"] .register-step select {
+  background: rgba(15, 23, 42, 0.6);
+  color: var(--neutral-900);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Botones */
+[data-theme="dark"] .register-actions button:first-child {
+  border-color: var(--neutral-200) !important;
+  color: var(--neutral-500) !important;
+}
+[data-theme="dark"] .register-actions button:last-child {
+  box-shadow: 0 8px 25px rgba(239, 68, 68, 0.4) !important;
+}
+
+[data-theme="dark"] .login-signup { color: var(--neutral-500); }
+[data-theme="dark"] .login-signup a { color: var(--primary-500); }
+
+/* Ajuste para el botón Volver en dark mode */
+.rg-form-inner a[href="/"] {
+  transition: all 0.2s ease;
+}
+
+[data-theme="dark"] .rg-form-inner a[href="/"] {
+  color: var(--neutral-900) !important;
+  opacity: 0.8 !important;
+}
+
+[data-theme="dark"] .rg-form-inner a[href="/"]:hover {
+  opacity: 1 !important;
+  color: var(--primary-400) !important;
+}
+
+/* Variables para el Arte Dinámico */
+:root {
+  --flora-red: rgba(255, 45, 45, 0.35);
+  --flora-amber: rgba(245, 158, 11, 0.22);
+}
+[data-theme="dark"] {
+  --flora-red: rgba(255, 50, 50, 0.6);
+  --flora-amber: rgba(245, 158, 11, 0.5);
+}
+
+/* ─── RESPONSIVE ─── */
+@media (max-width: 768px) {
+  .rg-organic-shell { padding: 2rem 1.5rem; justify-content: center; background: #fff; }
+  [data-theme="dark"] .rg-organic-shell { background: var(--surface-primary); }
+  .rg-wave-svg, .rg-bg-layer, .rg-fg-layer { display: none; }
+  .rg-form-inner { width: 100%; max-width: 440px; }
+  .login-form-container h1 { font-size: 1.8rem; }
+}
+
+/* ─── FORM & SHARED STYLES (Migrated from AuthPages) ─── */
+.login-form-container h1 {
+  font-size: var(--text-3xl);
+  margin-bottom: var(--space-2);
+  color: var(--neutral-900);
+}
+
+.login-subtitle {
+  color: var(--neutral-500);
+  font-size: var(--text-sm);
+  margin-bottom: var(--space-6);
+}
+
+.role-selector {
+  display: flex;
+  gap: var(--space-2);
+  margin-bottom: var(--space-6);
+  padding: var(--space-1);
+  background: var(--neutral-100);
+  border-radius: var(--radius-xl);
+}
+
+.role-btn {
+  flex: 1;
+  padding: var(--space-2) var(--space-3);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  border-radius: var(--radius-lg);
+  color: var(--neutral-500);
+  transition: all var(--transition-fast);
+  white-space: nowrap;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+}
+
+.role-btn:hover { color: var(--neutral-700); }
+
+.role-btn-active {
+  background: var(--neutral-0);
+  color: var(--primary-600);
+  box-shadow: var(--shadow-sm);
+  font-weight: 600;
+}
+
+[data-theme="dark"] .role-selector { background: rgba(255,255,255,0.05); }
+[data-theme="dark"] .role-btn-active { background: rgba(255,255,255,0.1); color: #ff4d4d; }
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.register-step {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.register-step label {
+  font-family: var(--font-display);
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--neutral-700);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+}
+
+.register-actions {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.login-divider {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  margin: var(--space-6) 0;
+}
+
+.login-divider::before,
+.login-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--neutral-200);
+}
+
+.login-divider span {
+  font-size: var(--text-xs);
+  color: var(--neutral-400);
+  white-space: nowrap;
+}
+
+.social-buttons {
+  display: flex;
+  gap: var(--space-3);
+}
+
+.social-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  border: 1.5px solid var(--neutral-200);
+  border-radius: var(--radius-xl);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--neutral-700);
+  background: var(--neutral-0);
+  transition: all var(--transition-fast);
+  cursor: pointer;
+}
+
+.social-btn:hover {
+  border-color: var(--neutral-300);
+  background: var(--neutral-50);
+}
+
+[data-theme="dark"] .social-btn {
+  background: rgba(255,255,255,0.05);
+  border-color: rgba(255,255,255,0.1);
+  color: white;
+}
+
+.login-signup {
+  text-align: center;
+  font-size: var(--text-sm);
+  color: var(--neutral-500);
+  margin-top: var(--space-6);
+}
+
+.form-field {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+.field-error {
+  position: absolute;
+  top: 12px;
+  left: calc(100% + 12px);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--error-500);
+  font-weight: 700;
+  pointer-events: none;
+  white-space: nowrap;
+  z-index: 5;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  background: var(--primary-50);
+  padding: 6px 12px;
+  border-radius: 20px;
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.15);
+  border: 1px solid var(--primary-100);
+}
+
+[data-theme="dark"] .field-error {
+  background: rgba(239, 68, 68, 0.2);
+  border-color: rgba(239, 68, 68, 0.3);
+  color: #ff6b6b;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+}
+@media (max-width: 1024px) {
+  .field-error {
+    position: static;
+    margin-top: 4px;
+    background: transparent;
+    padding: 0;
+    border: none;
+    box-shadow: none;
+  }
+}
+

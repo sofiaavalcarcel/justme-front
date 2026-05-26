@@ -1,0 +1,40 @@
+.rating {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.rating-stars {
+  display: flex;
+  gap: 1px;
+}
+
+.rating-sm .rating-stars svg { width: 14px; height: 14px; }
+.rating-md .rating-stars svg { width: 18px; height: 18px; }
+.rating-lg .rating-stars svg { width: 22px; height: 22px; }
+
+.star-filled {
+  fill: #fbbf24;
+  color: #fbbf24;
+}
+.star-half {
+  fill: #fbbf24;
+  color: #fbbf24;
+  opacity: 0.5;
+}
+.star-empty {
+  fill: none;
+  color: var(--neutral-300);
+}
+
+.rating-value {
+  font-weight: 700;
+  color: var(--neutral-800);
+  font-size: var(--text-sm);
+  margin-left: var(--space-1);
+}
+
+.rating-count {
+  color: var(--neutral-400);
+  font-size: var(--text-xs);
+}

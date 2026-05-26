@@ -1,0 +1,76 @@
+.mode-transition {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.mode-transition-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-4);
+    position: relative;
+    z-index: 1;
+}
+
+.mode-transition-icon {
+    width: 96px;
+    height: 96px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(10px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+}
+
+.mode-transition h1 {
+    font-size: 2.5rem;
+    font-weight: 800;
+    color: white;
+    margin: 0;
+    text-shadow: 0 2px 20px rgba(0, 0, 0, 0.15);
+}
+
+.mode-transition p {
+    font-size: 1.1rem;
+    color: rgba(255, 255, 255, 0.9);
+    margin: 0;
+    font-weight: 500;
+}
+
+.mode-particle {
+    position: absolute;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.5);
+    pointer-events: none;
+}
+
+@media (max-width: 768px) {
+    .mode-transition h1 {
+        font-size: 1.8rem;
+    }
+
+    .mode-transition p {
+        font-size: 0.95rem;
+    }
+
+    .mode-transition-icon {
+        width: 72px;
+        height: 72px;
+    }
+
+    .mode-transition-icon svg {
+        width: 36px;
+        height: 36px;
+    }
+}

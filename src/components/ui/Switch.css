@@ -1,0 +1,45 @@
+.justme-switch {
+  position: relative;
+  width: 44px;
+  height: 24px;
+  border-radius: 20px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  padding: 0;
+  display: flex;
+  align-items: center;
+  outline: none;
+}
+
+.switch-off {
+  background-color: var(--neutral-300);
+}
+
+.switch-on {
+  background-color: var(--primary-500);
+}
+
+.switch-thumb {
+  position: absolute;
+  left: 3px;
+  width: 18px;
+  height: 18px;
+  background-color: white;
+  border-radius: 50%;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: var(--shadow-sm);
+}
+
+.switch-on .switch-thumb {
+  left: calc(100% - 21px);
+}
+
+.switch-disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.justme-switch:focus-visible {
+  box-shadow: 0 0 0 2px var(--primary-100);
+}

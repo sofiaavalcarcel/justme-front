@@ -1,0 +1,16 @@
+.app-layout {
+  min-height: 100dvh;
+}
+
+.app-main {
+  padding-top: var(--topbar-height);
+  padding-bottom: var(--bottomnav-height);
+  min-height: 100dvh;
+}
+
+@media (min-width: 1024px) {
+  .app-main {
+    margin-left: var(--sidebar-width);
+    padding-bottom: 0;
+  }
+}

@@ -1,0 +1,1345 @@
+/* ============ UBER-STYLE SEARCH ============ */
+
+/* Full-screen layout */
+.uber-search {
+  position: relative;
+  height: calc(100vh - 60px);
+  overflow: hidden;
+}
+
+.uber-map-area {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+
+/* ─── Glass Panel Base ─── */
+.uber-panel {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border-top: 1px solid rgba(255, 255, 255, 0.4);
+  border-radius: var(--radius-2xl) var(--radius-2xl) 0 0;
+  box-shadow: 0 -8px 40px rgba(0, 0, 0, 0.1);
+  padding: var(--space-4) var(--space-5) var(--space-6);
+  max-height: 70vh;
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+
+/* Dark mode */
+[data-theme="dark"] .uber-panel {
+  background: rgba(24, 24, 32, 0.92);
+  border-top-color: rgba(255, 255, 255, 0.08);
+  box-shadow: 0 -8px 40px rgba(0, 0, 0, 0.3);
+}
+
+/* Handle bar */
+.uber-panel-handle {
+  display: flex;
+  justify-content: center;
+  padding-bottom: var(--space-3);
+  cursor: pointer;
+}
+
+.uber-handle-bar {
+  width: 40px;
+  height: 4px;
+  background: var(--neutral-300);
+  border-radius: var(--radius-full);
+}
+
+[data-theme="dark"] .uber-handle-bar {
+  background: var(--neutral-600);
+}
+
+/* ─── CHOOSE Phase ─── */
+.uber-panel-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+
+.uber-panel-header h2 {
+  font-size: var(--text-xl);
+  font-weight: 800;
+  font-family: var(--font-display);
+  margin: 0;
+}
+
+.uber-panel-header svg {
+  color: var(--primary-500);
+}
+
+.uber-panel-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+/* Service grid */
+.uber-services-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-2);
+}
+
+.uber-svc-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-2);
+  border-radius: var(--radius-xl);
+  background: transparent;
+  border: 1.5px solid transparent;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.uber-svc-btn:hover {
+  background: var(--neutral-50);
+}
+
+.uber-svc-active {
+  border-color: var(--primary-400);
+  background: var(--primary-50);
+}
+
+[data-theme="dark"] .uber-svc-btn:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+[data-theme="dark"] .uber-svc-active {
+  border-color: var(--primary-500);
+  background: rgba(220, 38, 38, 0.1);
+}
+
+.uber-svc-icon {
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-lg);
+}
+
+.uber-svc-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--neutral-600);
+  text-align: center;
+  line-height: 1.2;
+}
+
+[data-theme="dark"] .uber-svc-label {
+  color: var(--neutral-300);
+}
+
+/* Sections */
+.uber-section h3 {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-sm);
+  font-weight: 700;
+  color: var(--neutral-500);
+  margin-bottom: var(--space-3);
+}
+
+.uber-section h3 svg {
+  color: var(--primary-400);
+}
+
+.uber-pickers-row {
+  display: flex;
+  gap: var(--space-4);
+  align-items: flex-start;
+}
+
+.uber-picker-col {
+  flex: 1;
+  min-width: 0;
+}
+
+.uber-picker-col h3 {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--neutral-400);
+  margin-bottom: var(--space-2);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* Location toggle */
+.uber-loc-toggle {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-2);
+}
+
+.uber-loc-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  border-radius: var(--radius-xl);
+  border: 1.5px solid var(--neutral-200);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--neutral-500);
+  background: transparent;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.uber-loc-btn:hover {
+  border-color: var(--neutral-300);
+}
+
+.uber-loc-active {
+  border-color: var(--primary-500);
+  color: var(--primary-600);
+  background: var(--primary-50);
+}
+
+[data-theme="dark"] .uber-loc-btn {
+  border-color: rgba(255, 255, 255, 0.1);
+  color: var(--neutral-400);
+}
+
+[data-theme="dark"] .uber-loc-active {
+  border-color: var(--primary-500);
+  color: var(--primary-400);
+  background: rgba(220, 38, 38, 0.1);
+}
+
+/* Date scroll */
+.uber-date-scroll {
+  display: flex;
+  gap: var(--space-2);
+  overflow-x: auto;
+  padding-bottom: var(--space-1);
+  scrollbar-width: none;
+}
+.uber-date-scroll::-webkit-scrollbar { display: none; }
+
+.uber-date-chip {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 64px;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-xl);
+  border: 1.5px solid var(--neutral-200);
+  background: transparent;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.uber-date-active {
+  border-color: var(--primary-500);
+  background: var(--primary-50);
+}
+
+[data-theme="dark"] .uber-date-chip {
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+[data-theme="dark"] .uber-date-active {
+  border-color: var(--primary-500);
+  background: rgba(220, 38, 38, 0.1);
+}
+
+.uber-date-day {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--neutral-400);
+}
+
+.uber-date-num {
+  font-size: var(--text-sm);
+  font-weight: 700;
+  color: var(--neutral-800);
+}
+
+.uber-date-active .uber-date-num {
+  color: var(--primary-600);
+}
+
+[data-theme="dark"] .uber-date-num {
+  color: var(--neutral-200);
+}
+
+/* Time grid */
+.uber-time-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: var(--space-1);
+}
+
+.uber-time-chip {
+  padding: var(--space-2);
+  border-radius: var(--radius-lg);
+  border: 1.5px solid var(--neutral-200);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--neutral-600);
+  background: transparent;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.uber-time-active {
+  border-color: var(--primary-500);
+  background: var(--primary-50);
+  color: var(--primary-600);
+}
+
+[data-theme="dark"] .uber-time-chip {
+  border-color: rgba(255, 255, 255, 0.1);
+  color: var(--neutral-400);
+}
+
+[data-theme="dark"] .uber-time-active {
+  border-color: var(--primary-500);
+  background: rgba(220, 38, 38, 0.1);
+  color: var(--primary-400);
+}
+
+/* Search button */
+.uber-search-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  padding: var(--space-4);
+  background: var(--primary-600);
+  color: white;
+  border: none;
+  border-radius: var(--radius-xl);
+  font-size: var(--text-base);
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 4px 16px rgba(220, 38, 38, 0.3);
+}
+
+.uber-search-btn:not(:disabled):hover {
+  background: var(--primary-700);
+  box-shadow: 0 6px 24px rgba(220, 38, 38, 0.4);
+}
+
+.uber-search-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ─── SEARCHING Phase ─── */
+.uber-panel-searching {
+  max-height: none;
+  padding: var(--space-8) var(--space-6);
+}
+
+.uber-searching-content {
+  display: flex;
+  align-items: center;
+  gap: var(--space-5);
+}
+
+.uber-radar {
+  position: relative;
+  width: 60px;
+  height: 60px;
+  flex-shrink: 0;
+}
+
+.uber-radar-ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 2px solid var(--primary-300);
+  opacity: 0;
+}
+
+.uber-radar-1 { animation: radar-ping 2s ease-out infinite; }
+.uber-radar-2 { animation: radar-ping 2s ease-out 0.5s infinite; }
+.uber-radar-3 { animation: radar-ping 2s ease-out 1s infinite; }
+
+@keyframes radar-ping {
+  0% { transform: scale(0.3); opacity: 0.8; }
+  100% { transform: scale(1.2); opacity: 0; }
+}
+
+.uber-radar-dot {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 14px;
+  height: 14px;
+  background: var(--primary-500);
+  border: 2px solid white;
+  border-radius: 50%;
+  box-shadow: 0 0 12px rgba(220, 38, 38, 0.5);
+}
+
+.uber-searching-text h2 {
+  font-size: var(--text-lg);
+  font-weight: 800;
+  margin: 0 0 4px;
+}
+
+.uber-searching-text p {
+  font-size: var(--text-sm);
+  color: var(--neutral-500);
+  margin: 0;
+}
+
+/* ─── RESULTS Phase ─── */
+.uber-results-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+
+.uber-results-header h2 {
+  font-size: var(--text-base);
+  font-weight: 800;
+  margin: 0;
+}
+
+.uber-results-header p {
+  font-size: 12px;
+  color: var(--neutral-400);
+  margin: 0;
+}
+
+.uber-back-btn {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-full);
+  border: 1.5px solid var(--neutral-200);
+  background: transparent;
+  color: var(--neutral-600);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 0.2s;
+}
+
+.uber-back-btn:hover {
+  background: var(--neutral-50);
+}
+
+[data-theme="dark"] .uber-back-btn {
+  border-color: rgba(255, 255, 255, 0.1);
+  color: var(--neutral-300);
+}
+
+.uber-expand-btn {
+  margin-left: auto;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-full);
+  border: none;
+  background: var(--neutral-100);
+  color: var(--neutral-500);
+  cursor: pointer;
+}
+
+[data-theme="dark"] .uber-expand-btn {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--neutral-400);
+}
+
+.uber-results-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.booking-summary-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-2) var(--space-4);
+  background: var(--neutral-50);
+  border-radius: var(--radius-lg);
+  margin-bottom: var(--space-4);
+}
+
+[data-theme="dark"] .booking-summary-header {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.back-to-pro {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: transparent;
+  border: none;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--primary-600);
+  cursor: pointer;
+  text-transform: uppercase;
+}
+
+.selected-services-badge {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--neutral-400);
+  background: var(--neutral-100);
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+}
+
+[data-theme="dark"] .selected-services-badge {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.uber-section-title {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--neutral-400);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: var(--space-2);
+}
+
+/* Professional cards */
+.uber-pro-card {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  border-radius: var(--radius-xl);
+  cursor: pointer;
+  transition: all 0.2s;
+  border: 1px solid transparent;
+}
+
+.uber-pro-card:hover {
+  background: rgba(0, 0, 0, 0.03);
+}
+
+[data-theme="dark"] .uber-pro-card:hover {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.uber-pro-fav {
+  background: rgba(251, 191, 36, 0.05);
+  border-color: rgba(251, 191, 36, 0.2);
+}
+
+.uber-pro-fav:hover {
+  background: rgba(251, 191, 36, 0.1) !important;
+}
+
+.uber-pro-avatar {
+  width: 50px;
+  height: 50px;
+  border-radius: var(--radius-full);
+  object-fit: cover;
+  border: 2px solid var(--neutral-100);
+  flex-shrink: 0;
+}
+
+.uber-pro-fav .uber-pro-avatar {
+  border-color: #fbbf24;
+}
+
+.uber-pro-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.uber-pro-info h4 {
+  font-size: var(--text-sm);
+  font-weight: 700;
+  margin: 0 0 2px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.uber-verified {
+  color: #3b82f6;
+}
+
+.uber-pro-meta {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  font-size: 12px;
+  color: var(--neutral-500);
+}
+
+.uber-pro-meta span {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.uber-pro-avail {
+  color: var(--success-500) !important;
+  font-weight: 600;
+}
+
+.uber-pro-tags {
+  display: flex;
+  gap: 4px;
+  margin-top: 4px;
+}
+
+.uber-pro-tags span {
+  padding: 1px 8px;
+  border-radius: var(--radius-full);
+  font-size: 10px;
+  font-weight: 600;
+  background: var(--neutral-100);
+  color: var(--neutral-500);
+}
+
+[data-theme="dark"] .uber-pro-tags span {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--neutral-400);
+}
+
+.uber-pro-price {
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+  font-weight: 800;
+  color: var(--primary-600);
+  flex-shrink: 0;
+}
+
+.uber-card-actions {
+  display: flex;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+}
+
+.uber-view-pro-btn {
+  padding: 6px 12px;
+  background: var(--primary-600);
+  color: white;
+  border: 1px solid var(--primary-600);
+  border-radius: var(--radius-lg);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  transition: all 0.2s;
+  flex: 1;
+  text-align: center;
+}
+
+.uber-view-pro-btn.ghost {
+  background: transparent;
+  color: var(--primary-600);
+  border-color: var(--primary-200);
+}
+
+.uber-view-pro-btn:hover {
+  transform: translateY(-1px);
+}
+
+.uber-view-pro-btn:not(.ghost):hover {
+  background: var(--primary-700);
+  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.2);
+}
+
+.uber-view-pro-btn.ghost:hover {
+  background: rgba(220, 38, 38, 0.05);
+  border-color: var(--primary-300);
+}
+
+.uber-view-pro-btn:active {
+  transform: translateY(0);
+}
+
+/* No results */
+.uber-no-results {
+  text-align: center;
+  padding: var(--space-8) var(--space-4);
+  color: var(--neutral-400);
+}
+
+/* Location Notice */
+.uber-loc-notice {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  background: rgba(245, 158, 11, 0.1);
+  border: 1px solid rgba(245, 158, 11, 0.2);
+  border-radius: var(--radius-lg);
+  font-size: 11px;
+  color: #d97706;
+  margin-bottom: var(--space-4);
+}
+
+[data-theme="dark"] .uber-loc-notice {
+  background: rgba(245, 158, 11, 0.05);
+  border-color: rgba(245, 158, 11, 0.1);
+  color: #fbbf24;
+}
+
+.uber-loc-retry {
+  margin-left: auto;
+  border: none;
+  background: #d97706;
+  color: white;
+  padding: 2px 8px;
+  border-radius: var(--radius-md);
+  font-size: 10px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.uber-loc-retry:hover {
+  background: #b45309;
+}
+
+.uber-no-results h3 {
+  margin: var(--space-2) 0 var(--space-1);
+  color: var(--neutral-600);
+}
+
+.uber-no-results p {
+  font-size: var(--text-sm);
+}
+
+/* ─── PROFILE Phase ─── */
+.uber-profile-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+
+.uber-profile-avatar {
+  width: 56px;
+  height: 56px;
+  border-radius: var(--radius-full);
+  object-fit: cover;
+  border: 3px solid var(--primary-100);
+}
+
+.uber-profile-info {
+  flex: 1;
+}
+
+.uber-profile-info h2 {
+  font-size: var(--text-lg);
+  font-weight: 800;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.uber-profile-stats {
+  display: flex;
+  gap: var(--space-3);
+  font-size: 12px;
+  color: var(--neutral-500);
+  margin-top: 2px;
+}
+
+.uber-profile-stats span {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.uber-profile-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.uber-profile-bio {
+  font-size: var(--text-sm);
+  color: var(--neutral-600);
+  line-height: var(--leading-relaxed);
+  margin: 0;
+}
+
+.uber-profile-location {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-sm);
+  color: var(--neutral-500);
+  padding: var(--space-2) var(--space-3);
+  background: var(--neutral-50);
+  border-radius: var(--radius-lg);
+}
+
+[data-theme="dark"] .uber-profile-location {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+/* Availability Calendar */
+.uber-avail-section h3 {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-sm);
+  font-weight: 700;
+  color: var(--neutral-500);
+  margin-bottom: var(--space-3);
+}
+
+.uber-avail-calendar {
+  display: flex;
+  gap: var(--space-2);
+  overflow-x: auto;
+  padding-bottom: var(--space-1);
+  scrollbar-width: none;
+}
+.uber-avail-calendar::-webkit-scrollbar { display: none; }
+
+.uber-avail-calendar.single-day {
+  display: block;
+}
+
+.uber-avail-calendar.single-day .uber-avail-day {
+  min-width: 100%;
+  padding: var(--space-4);
+}
+
+.uber-avail-day {
+  min-width: 100px;
+  padding: var(--space-2);
+  border-radius: var(--radius-xl);
+  border: 1.5px solid var(--neutral-200);
+  background: transparent;
+  flex-shrink: 0;
+}
+
+.uber-avail-day-active {
+  border-color: var(--primary-400);
+  background: var(--primary-50);
+}
+
+[data-theme="dark"] .uber-avail-day {
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+[data-theme="dark"] .uber-avail-day-active {
+  border-color: var(--primary-500);
+  background: rgba(220, 38, 38, 0.08);
+}
+
+.uber-avail-day-header {
+  text-align: center;
+  margin-bottom: var(--space-2);
+  padding-bottom: var(--space-1);
+  border-bottom: 1px solid var(--neutral-100);
+}
+
+[data-theme="dark"] .uber-avail-day-header {
+  border-bottom-color: rgba(255, 255, 255, 0.06);
+}
+
+.uber-avail-weekday {
+  display: block;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--neutral-400);
+  text-transform: uppercase;
+}
+
+.uber-avail-date {
+  display: block;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--neutral-700);
+}
+
+[data-theme="dark"] .uber-avail-date {
+  color: var(--neutral-300);
+}
+
+.uber-avail-slots {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  justify-content: center;
+  padding-top: var(--space-3);
+}
+
+.uber-slots-loading {
+  display: flex;
+  justify-content: center;
+  padding: var(--space-4);
+  width: 100%;
+}
+
+.uber-slot-empty {
+  font-size: var(--text-sm);
+  color: var(--neutral-400);
+  padding: var(--space-3);
+  text-align: center;
+  width: 100%;
+}
+
+.uber-slot-btn {
+  padding: 4px 6px;
+  border-radius: var(--radius-md);
+  font-size: 11px;
+  font-weight: 600;
+  border: 1px solid var(--neutral-200);
+  background: transparent;
+  color: var(--neutral-600);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.uber-slot-btn:hover {
+  border-color: var(--primary-300);
+  color: var(--primary-600);
+}
+
+.uber-slot-active {
+  background: var(--primary-500);
+  color: white;
+  border-color: var(--primary-500);
+}
+
+.uber-slot-active:hover {
+  background: var(--primary-600);
+  color: white;
+}
+
+[data-theme="dark"] .uber-slot-btn {
+  border-color: rgba(255, 255, 255, 0.1);
+  color: var(--neutral-400);
+}
+
+.uber-slot-empty {
+  font-size: 11px;
+  color: var(--neutral-400);
+  text-align: center;
+  padding: var(--space-2);
+}
+
+/* Book button */
+.uber-book-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  padding: var(--space-4);
+  background: var(--primary-600);
+  color: white;
+  border: none;
+  border-radius: var(--radius-xl);
+  font-size: var(--text-base);
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 4px 16px rgba(220, 38, 38, 0.3);
+}
+
+.uber-book-btn:not(:disabled):hover {
+  background: var(--primary-700);
+  box-shadow: 0 6px 24px rgba(220, 38, 38, 0.4);
+}
+
+.uber-book-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ─── CONFIRMED Phase ─── */
+.uber-panel-confirmed {
+  max-height: none;
+  text-align: center;
+  padding: var(--space-8) var(--space-6);
+}
+
+.uber-confirm-check {
+  width: 72px;
+  height: 72px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--success-500);
+  color: white;
+  border-radius: var(--radius-full);
+  margin: 0 auto var(--space-4);
+  box-shadow: 0 4px 24px rgba(16, 185, 129, 0.3);
+}
+
+.uber-panel-confirmed h2 {
+  font-size: var(--text-xl);
+  font-weight: 800;
+  margin: 0 0 var(--space-1);
+}
+
+.uber-panel-confirmed > p {
+  color: var(--neutral-500);
+  font-size: var(--text-sm);
+  margin: 0 0 var(--space-5);
+}
+
+.uber-confirm-details {
+  background: var(--neutral-50);
+  border-radius: var(--radius-xl);
+  padding: var(--space-4);
+  text-align: left;
+  margin-bottom: var(--space-4);
+}
+
+[data-theme="dark"] .uber-confirm-details {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.uber-confirm-pro {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding-bottom: var(--space-3);
+  border-bottom: 1px solid var(--neutral-200);
+  margin-bottom: var(--space-3);
+}
+
+[data-theme="dark"] .uber-confirm-pro {
+  border-bottom-color: rgba(255, 255, 255, 0.08);
+}
+
+.uber-confirm-pro img {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-full);
+  object-fit: cover;
+}
+
+.uber-confirm-pro strong {
+  display: block;
+  font-size: var(--text-sm);
+  font-weight: 700;
+}
+
+.uber-confirm-pro span {
+  font-size: 12px;
+  color: var(--neutral-500);
+}
+
+.uber-confirm-rows {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.uber-confirm-rows div {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-sm);
+  color: var(--neutral-600);
+}
+
+.uber-confirm-rows svg {
+  color: var(--primary-400);
+  flex-shrink: 0;
+}
+
+.uber-confirm-price {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: var(--space-3);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--neutral-200);
+  font-size: var(--text-sm);
+  color: var(--neutral-500);
+}
+
+[data-theme="dark"] .uber-confirm-price {
+  border-top-color: rgba(255, 255, 255, 0.08);
+}
+
+.uber-confirm-price strong {
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+  font-weight: 800;
+  color: var(--primary-600);
+}
+
+.uber-confirm-actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.uber-confirm-main-btn {
+  padding: var(--space-3) var(--space-4);
+  background: var(--primary-600);
+  color: white;
+  border: none;
+  border-radius: var(--radius-xl);
+  font-size: var(--text-sm);
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.uber-confirm-main-btn:hover { background: var(--primary-700); }
+
+.uber-confirm-ghost-btn {
+  padding: var(--space-3) var(--space-4);
+  background: transparent;
+  border: 1.5px solid var(--neutral-200);
+  border-radius: var(--radius-xl);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--neutral-600);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.uber-confirm-ghost-btn:hover { background: var(--neutral-50); }
+
+[data-theme="dark"] .uber-confirm-ghost-btn {
+  border-color: rgba(255, 255, 255, 0.1);
+  color: var(--neutral-400);
+}
+
+/* ─── Location Pill ─── */
+.uber-location-pill {
+  position: absolute;
+  top: var(--space-4);
+  left: var(--space-4);
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-full);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--neutral-700);
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+}
+
+.uber-location-pill svg {
+  color: var(--primary-500);
+}
+
+[data-theme="dark"] .uber-location-pill {
+  background: rgba(24, 24, 32, 0.88);
+  color: var(--neutral-300);
+}
+
+/* ─── Spinning icon ─── */
+.spin-icon {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* ─── Desktop: Side Panel ─── */
+@media (min-width: 1024px) {
+  .uber-panel {
+    left: auto;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    width: 420px;
+    border-radius: 0;
+    border-top: none;
+    border-left: 1px solid rgba(255, 255, 255, 0.4);
+    max-height: 100%;
+    box-shadow: -8px 0 40px rgba(0, 0, 0, 0.1);
+  }
+
+  [data-theme="dark"] .uber-panel {
+    border-left-color: rgba(255, 255, 255, 0.08);
+    border-top: none;
+  }
+
+  .uber-panel-handle {
+    display: none;
+  }
+
+  .uber-location-pill {
+    left: var(--space-6);
+    top: var(--space-6);
+  }
+
+  .uber-services-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+
+  .uber-time-grid {
+    grid-template-columns: repeat(5, 1fr);
+  }
+}
+
+/* ─── Mobile: Smaller adjustments ─── */
+@media (max-width: 480px) {
+  .uber-services-grid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: var(--space-1);
+  }
+
+  .uber-svc-icon {
+    width: 38px;
+    height: 38px;
+  }
+
+  .uber-svc-label {
+    font-size: 10px;
+  }
+
+  .uber-time-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+
+  .uber-panel {
+    padding: var(--space-3) var(--space-4) var(--space-5);
+  }
+}
+
+/* ─── Checkout UX ─── */
+.uber-checkout-summary {
+  background: var(--neutral-50);
+  border-radius: var(--radius-xl);
+  padding: var(--space-4);
+  margin-bottom: var(--space-4);
+  border: 1px solid var(--neutral-100);
+}
+
+[data-theme="dark"] .uber-checkout-summary {
+  background: rgba(255, 255, 255, 0.03);
+  border-color: rgba(255, 255, 255, 0.05);
+}
+
+.checkout-title {
+  margin: 0 0 var(--space-4) 0;
+  font-size: var(--text-sm);
+  color: var(--neutral-500);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 700;
+}
+
+.checkout-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: var(--space-3) 0;
+  border-bottom: 1px dashed var(--neutral-200);
+}
+
+[data-theme="dark"] .checkout-item {
+  border-bottom-color: rgba(255, 255, 255, 0.1);
+}
+
+.checkout-label {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--neutral-600);
+  font-size: var(--text-sm);
+  font-weight: 500;
+}
+
+[data-theme="dark"] .checkout-label {
+  color: var(--neutral-400);
+}
+
+.checkout-val {
+  color: var(--neutral-900);
+  font-weight: 600;
+  font-size: var(--text-sm);
+  text-align: right;
+  text-transform: capitalize;
+}
+
+[data-theme="dark"] .checkout-val {
+  color: white;
+}
+
+.checkout-item.highlight-time {
+  background: var(--primary-50);
+  margin: var(--space-2) -var(--space-4);
+  padding: var(--space-4);
+  border-bottom: none;
+  border-radius: var(--radius-lg);
+}
+
+[data-theme="dark"] .checkout-item.highlight-time {
+  background: rgba(139, 69, 255, 0.1);
+}
+
+.highlight-time .checkout-val {
+  color: var(--primary-700);
+}
+
+[data-theme="dark"] .highlight-time .checkout-val {
+  color: var(--primary-300);
+}
+
+.checkout-total {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: var(--space-4);
+  margin-top: var(--space-2);
+  font-size: var(--text-lg);
+  font-weight: 700;
+  color: var(--neutral-900);
+}
+
+[data-theme="dark"] .checkout-total {
+  color: white;
+}
+
+.checkout-disclaimer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  margin-top: var(--space-4);
+  font-size: 11px;
+  color: var(--neutral-500);
+}
+
+.confirm-checkout-btn {
+  height: 54px;
+  font-size: var(--text-lg);
+}

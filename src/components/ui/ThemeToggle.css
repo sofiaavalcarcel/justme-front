@@ -1,0 +1,37 @@
+.theme-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-full);
+  background: var(--neutral-900); /* Dark background in light mode so white icon shows */
+  color: #ffffff; /* Always white */
+  border: 1px solid var(--neutral-200);
+  cursor: pointer;
+  transition: background var(--transition-base), color var(--transition-base), border-color var(--transition-base);
+}
+
+.theme-toggle:hover {
+  background: var(--neutral-800);
+  color: #ffffff;
+}
+
+.theme-toggle-sm {
+  width: 32px;
+  height: 32px;
+}
+
+.theme-toggle-md {
+  width: 40px;
+  height: 40px;
+}
+
+[data-theme="dark"] .theme-toggle {
+  background: var(--neutral-100); /* Slightly lighter dark background in dark mode */
+  border-color: var(--neutral-200);
+  color: #ffffff; /* Always white */
+}
+
+[data-theme="dark"] .theme-toggle:hover {
+  background: var(--neutral-200);
+  color: #ffffff;
+}

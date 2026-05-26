@@ -1,0 +1,93 @@
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  font-family: var(--font-body);
+  font-weight: 600;
+  border-radius: var(--radius-xl);
+  transition: all var(--transition-base);
+  cursor: pointer;
+  border: none;
+  white-space: nowrap;
+  position: relative;
+  overflow: hidden;
+}
+
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* Sizes */
+.btn-sm { padding: var(--space-2) var(--space-3); font-size: var(--text-sm); }
+.btn-md { padding: var(--space-3) var(--space-6); font-size: var(--text-base); }
+.btn-lg { padding: var(--space-4) var(--space-8); font-size: var(--text-lg); }
+
+/* Variants */
+.btn-primary {
+  background: linear-gradient(135deg, var(--primary-500), var(--primary-700));
+  color: white;
+  box-shadow: 0 4px 15px rgba(220,38,38,0.3);
+}
+.btn-primary:hover:not(:disabled) {
+  box-shadow: 0 6px 25px rgba(220,38,38,0.45);
+}
+
+.btn-secondary {
+  background: var(--surface-primary);
+  color: var(--neutral-800);
+  border: 1.5px solid var(--neutral-200);
+}
+.btn-secondary:hover:not(:disabled) {
+  border-color: var(--primary-300);
+  color: var(--primary-600);
+  background: var(--primary-50);
+}
+
+.btn-outline {
+  background: transparent;
+  color: var(--neutral-800);
+  border: 1.5px solid var(--neutral-300);
+}
+.btn-outline:hover:not(:disabled) {
+  border-color: var(--primary-500);
+  color: var(--primary-600);
+  background: var(--primary-50);
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--neutral-600);
+}
+.btn-ghost:hover:not(:disabled) {
+  background: var(--neutral-100);
+  color: var(--neutral-900);
+}
+
+.btn-danger {
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+  color: white;
+  box-shadow: 0 4px 15px rgba(239,68,68,0.3);
+}
+
+.btn-accent {
+  background: linear-gradient(135deg, var(--primary-500), var(--accent-500));
+  color: white;
+  box-shadow: 0 4px 15px rgba(245,158,11,0.25);
+}
+.btn-accent:hover:not(:disabled) {
+  box-shadow: 0 6px 25px rgba(245,158,11,0.4);
+}
+
+.btn-full { width: 100%; }
+
+.btn-icon { display: flex; align-items: center; }
+
+/* Spinner */
+.btn-spinner {
+  width: 18px; height: 18px;
+  border: 2px solid rgba(255,255,255,0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+
+.btn-loading { pointer-events: none; }

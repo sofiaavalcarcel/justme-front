@@ -1,0 +1,215 @@
+.bpm-modal {
+    min-width: 360px;
+    max-width: 480px;
+}
+
+.bpm-step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-4);
+    padding: var(--space-4) 0;
+}
+
+.bpm-icon-wrap {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--primary-50);
+    color: var(--primary-500);
+}
+
+.bpm-step h2 {
+    font-size: var(--text-xl);
+    font-weight: 700;
+    margin: 0;
+    text-align: center;
+}
+
+.bpm-desc {
+    font-size: var(--text-sm);
+    color: var(--neutral-500);
+    text-align: center;
+    line-height: 1.5;
+    margin: 0;
+}
+
+.bpm-warning {
+    display: flex;
+    gap: var(--space-3);
+    padding: var(--space-3);
+    background: #fff3cd;
+    border: 1px solid #ffc107;
+    border-radius: var(--radius-md);
+    font-size: var(--text-sm);
+    color: #856404;
+    width: 100%;
+}
+
+[data-theme="dark"] .bpm-warning {
+    background: rgba(255, 193, 7, 0.1);
+    border-color: rgba(255, 193, 7, 0.3);
+    color: #ffc107;
+}
+
+.bpm-warning strong {
+    display: block;
+    margin-bottom: var(--space-1);
+}
+
+.bpm-warning p {
+    margin: 0;
+    line-height: 1.4;
+}
+
+.bpm-warning svg {
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.bpm-checkbox {
+    display: flex;
+    gap: var(--space-3);
+    align-items: flex-start;
+    padding: var(--space-3);
+    background: var(--neutral-50);
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    width: 100%;
+    font-size: var(--text-sm);
+    line-height: 1.4;
+    color: var(--neutral-600);
+    transition: background 0.2s;
+}
+
+[data-theme="dark"] .bpm-checkbox {
+    background: var(--neutral-800);
+    color: var(--neutral-300);
+}
+
+.bpm-checkbox:hover {
+    background: var(--neutral-100);
+}
+
+[data-theme="dark"] .bpm-checkbox:hover {
+    background: var(--neutral-700);
+}
+
+.bpm-checkbox input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    margin-top: 2px;
+    flex-shrink: 0;
+    accent-color: var(--primary-500);
+}
+
+.bpm-continue-btn {
+    width: 100%;
+}
+
+.bpm-form-group {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+}
+
+.bpm-form-group label {
+    font-size: var(--text-sm);
+    font-weight: 600;
+    color: var(--neutral-700);
+}
+
+[data-theme="dark"] .bpm-form-group label {
+    color: var(--neutral-200);
+}
+
+.bpm-input {
+    width: 100%;
+    padding: var(--space-3);
+    border: 1px solid var(--neutral-200);
+    border-radius: var(--radius-md);
+    font-size: var(--text-sm);
+    background: var(--neutral-0);
+    color: var(--neutral-900);
+    transition: border-color 0.2s;
+}
+
+[data-theme="dark"] .bpm-input {
+    background: var(--neutral-800);
+    border-color: var(--neutral-600);
+    color: var(--neutral-100);
+}
+
+.bpm-input:focus {
+    outline: none;
+    border-color: var(--primary-500);
+}
+
+.bpm-upload-area {
+    width: 100%;
+}
+
+.bpm-file-input {
+    display: none;
+}
+
+.bpm-upload-label {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-6);
+    border: 2px dashed var(--neutral-300);
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    color: var(--neutral-400);
+    transition: border-color 0.2s, color 0.2s;
+}
+
+.bpm-upload-label:hover {
+    border-color: var(--primary-500);
+    color: var(--primary-500);
+}
+
+.bpm-upload-hint {
+    font-size: var(--text-xs);
+    color: var(--neutral-400);
+}
+
+.bpm-file-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+    margin-top: var(--space-2);
+}
+
+.bpm-file-item {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    font-size: var(--text-sm);
+    color: var(--neutral-600);
+    padding: var(--space-1) var(--space-2);
+    background: var(--neutral-50);
+    border-radius: var(--radius-sm);
+}
+
+[data-theme="dark"] .bpm-file-item {
+    background: var(--neutral-800);
+    color: var(--neutral-300);
+}
+
+.bpm-actions {
+    display: flex;
+    gap: var(--space-3);
+    width: 100%;
+    justify-content: space-between;
+}
+
+.bpm-actions button:last-child {
+    flex: 1;
+}
