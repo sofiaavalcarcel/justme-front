@@ -36,7 +36,9 @@ export function useAppointments(professionalId: string | number | null) {
       clientName,
       clientAvatar: b.user?.avatar || b.client?.avatar,
       serviceName: b.professionalService?.service?.name || b.service?.name || b.serviceName || t('proDash.service', 'Servicio'),
-      date: b.date || (b.scheduledAt ? new Date(b.scheduledAt).toISOString().split('T')[0] : ''),
+      date: b.date
+        ? (typeof b.date === 'string' ? b.date.split('T')[0] : new Date(b.date).toISOString().split('T')[0])
+        : (b.scheduledAt ? new Date(b.scheduledAt).toISOString().split('T')[0] : ''),
       startTime: b.startTime || (b.scheduledAt ? new Date(b.scheduledAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''),
       price: b.price ? parseFloat(b.price) : 0,
       locationType: b.locationType || 'professional',

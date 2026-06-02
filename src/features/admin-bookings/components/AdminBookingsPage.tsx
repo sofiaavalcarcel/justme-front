@@ -55,19 +55,15 @@ export function AdminBookingsPage() {
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const { bookings, stats, total, totalPages, isLoading } = useAdminBookings(page, 10);
+  // Pass search to hook so filtering is done server-side
+  const filters = useMemo(() => (searchTerm ? { search: searchTerm } : {}), [searchTerm]);
+  const { bookings, stats, total, totalPages, isLoading } = useAdminBookings(page, 10, filters);
 
-  const formatCurrency = (val: number) => 
+  const formatCurrency = (val: number) =>
     new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(val);
 
-  const filteredBookings = useMemo(() => {
-    if (!searchTerm) return bookings;
-    return bookings.filter(b => 
-      b.user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      b.professional.user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      b.professionalService.service.name.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-  }, [bookings, searchTerm]);
+  // bookings already filtered by backend
+  const filteredBookings = bookings;
 
   return (
     <div className="admin-bookings-feature" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-8)', maxWidth: '1400px', margin: '0 auto', padding: 'var(--space-4)' }}>
@@ -147,7 +143,7 @@ export function AdminBookingsPage() {
                 </tr>
               ) : (
                 <AnimatePresence>
-                  {filteredBookings.map((booking, i) => (
+                  {filteredBookings.map((booking: Booking, i: number) => (
                     <motion.tr 
                       key={booking.id}
                       initial={{ opacity: 0, x: -10 }}
@@ -158,22 +154,22 @@ export function AdminBookingsPage() {
                     >
                       <td style={{ padding: '16px' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                          <Avatar src={booking.user.avatar} name={booking.user.name} size="sm" />
+                          <Avatar src={booking.user?.avatar} name={booking.user?.name || '?'} size="sm" />
                           <div>
-                            <p style={{ fontSize: 'var(--text-sm)', fontWeight: 600, color: 'var(--neutral-900)', margin: 0 }}>{booking.user.name} {booking.user.lastName}</p>
+                            <p style={{ fontSize: 'var(--text-sm)', fontWeight: 600, color: 'var(--neutral-900)', margin: 0 }}>{booking.user?.name} {booking.user?.lastName}</p>
                             <p style={{ fontSize: '11px', color: 'var(--neutral-500)', margin: 0 }}>ID: #{booking.userId}</p>
                           </div>
                         </div>
                       </td>
                       <td style={{ padding: '16px' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                          <Avatar src={booking.professional.user.avatar} name={booking.professional.user.name} size="xs" />
-                          <p style={{ fontSize: 'var(--text-sm)', fontWeight: 500, color: 'var(--neutral-700)', margin: 0 }}>{booking.professional.user.name}</p>
+                          <Avatar src={booking.professional?.user?.avatar} name={booking.professional?.user?.name || '?'} size="xs" />
+                          <p style={{ fontSize: 'var(--text-sm)', fontWeight: 500, color: 'var(--neutral-700)', margin: 0 }}>{booking.professional?.user?.name}</p>
                         </div>
                       </td>
                       <td style={{ padding: '16px' }}>
                         <Badge variant="default" style={{ background: 'var(--neutral-100)', color: 'var(--neutral-700)' }}>
-                          {booking.professionalService.service.name}
+                          {booking.professionalService?.service?.name || '—'}
                         </Badge>
                       </td>
                       <td style={{ padding: '16px' }}>
@@ -274,12 +270,12 @@ function BookingDetailsModal({ booking, onClose, formatCurrency }: any) {
                 <User size={16} /> Información del Cliente
               </h4>
               <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                <Avatar src={booking.user.avatar} name={booking.user.name} size="lg" />
+                <Avatar src={booking.user?.avatar} name={booking.user?.name || '?'} size="lg" />
                 <div>
-                  <p style={{ fontSize: 'var(--text-lg)', fontWeight: 700, color: 'var(--neutral-900)', margin: 0 }}>{booking.user.name} {booking.user.lastName}</p>
+                  <p style={{ fontSize: 'var(--text-lg)', fontWeight: 700, color: 'var(--neutral-900)', margin: 0 }}>{booking.user?.name} {booking.user?.lastName}</p>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginTop: '4px' }}>
-                    <span style={{ fontSize: 'var(--text-xs)', color: 'var(--neutral-500)', display: 'flex', alignItems: 'center', gap: '6px' }}><Mail size={12} /> {booking.user.email}</span>
-                    <span style={{ fontSize: 'var(--text-xs)', color: 'var(--neutral-500)', display: 'flex', alignItems: 'center', gap: '6px' }}><Phone size={12} /> {booking.user.phone}</span>
+                    <span style={{ fontSize: 'var(--text-xs)', color: 'var(--neutral-500)', display: 'flex', alignItems: 'center', gap: '6px' }}><Mail size={12} /> {booking.user?.email || '—'}</span>
+                    <span style={{ fontSize: 'var(--text-xs)', color: 'var(--neutral-500)', display: 'flex', alignItems: 'center', gap: '6px' }}><Phone size={12} /> {booking.user?.phone || '—'}</span>
                   </div>
                 </div>
               </div>
@@ -290,9 +286,9 @@ function BookingDetailsModal({ booking, onClose, formatCurrency }: any) {
                 <Scissors size={16} /> Profesional Asignado
               </h4>
               <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                <Avatar src={booking.professional.user.avatar} name={booking.professional.user.name} size="lg" />
+                <Avatar src={booking.professional?.user?.avatar} name={booking.professional?.user?.name || '?'} size="lg" />
                 <div>
-                  <p style={{ fontSize: 'var(--text-lg)', fontWeight: 700, color: 'var(--neutral-900)', margin: 0 }}>{booking.professional.user.name} {booking.professional.user.lastName}</p>
+                  <p style={{ fontSize: 'var(--text-lg)', fontWeight: 700, color: 'var(--neutral-900)', margin: 0 }}>{booking.professional?.user?.name} {booking.professional?.user?.lastName}</p>
                   <Badge variant="accent" size="sm">Especialista en Belleza</Badge>
                 </div>
               </div>

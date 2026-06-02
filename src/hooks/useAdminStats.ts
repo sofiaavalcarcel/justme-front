@@ -10,6 +10,15 @@ export interface AdminStatsDto {
   activeServices: number;
 }
 
+export interface AdminAnalyticsDto {
+  avgRating: number;
+  monthlyGrowth: number;
+  bookingRate: number;
+  cancelRate: number;
+  totalBookings: number;
+  completedBookings: number;
+}
+
 export interface MonthlyRevenueDto {
   label: string;
   revenue: number;
@@ -18,6 +27,7 @@ export interface MonthlyRevenueDto {
 
 interface AdminDashboardData {
   stats: AdminStatsDto | null;
+  analytics: AdminAnalyticsDto | null;
   activities: any[];
   transactions: any[];
   revenueChart: MonthlyRevenueDto[];
@@ -32,12 +42,13 @@ interface AdminDashboardData {
 
 export function useAdminStats(): AdminDashboardData {
   const [stats, setStats] = useState<AdminStatsDto | null>(null);
+  const [analytics, setAnalytics] = useState<AdminAnalyticsDto | null>(null);
   const [activities, setActivities] = useState<any[]>([]);
   const [transactions, setTransactions] = useState<any[]>([]);
   const [revenueChart, setRevenueChart] = useState<MonthlyRevenueDto[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  
+
   const [activityMeta, setActivityMeta] = useState<any>(null);
   const [transactionMeta, setTransactionMeta] = useState<any>(null);
 
@@ -70,20 +81,22 @@ export function useAdminStats(): AdminDashboardData {
   const loadAll = async () => {
     setLoading(true);
     try {
-      const [statsRes, activityRes, txRes, chartRes] = await Promise.all([
+      const [statsRes, activityRes, txRes, chartRes, analyticsRes] = await Promise.all([
         apiClient.get<AdminStatsDto>('/admin/stats'),
         apiClient.get('/admin/activity?page=1&limit=5'),
         apiClient.get('/admin/transactions?page=1&limit=10'),
         apiClient.get<MonthlyRevenueDto[]>('/admin/revenue-chart'),
+        apiClient.get<AdminAnalyticsDto>('/admin/analytics'),
       ]);
 
       setStats(statsRes.data);
+      setAnalytics(analyticsRes.data);
       setActivities(activityRes.data?.data || []);
       setActivityMeta({ total: activityRes.data?.total || 0, page: 1, totalPages: activityRes.data?.totalPages || 1 });
-      
+
       setTransactions(txRes.data?.data || []);
       setTransactionMeta({ total: txRes.data?.total || 0, page: 1, totalPages: txRes.data?.totalPages || 1 });
-      
+
       setRevenueChart(chartRes.data);
     } catch (err: any) {
       setError(err?.response?.data?.message || 'No se pudieron cargar los datos del dashboard.');
@@ -96,10 +109,10 @@ export function useAdminStats(): AdminDashboardData {
     loadAll();
   }, []);
 
-  return { 
-    stats, activities, transactions, revenueChart, loading, error, 
-    activityMeta, transactionMeta, fetchActivities, fetchTransactions, 
-    reload: loadAll 
+  return {
+    stats, analytics, activities, transactions, revenueChart, loading, error,
+    activityMeta, transactionMeta, fetchActivities, fetchTransactions,
+    reload: loadAll,
   };
 }
 
