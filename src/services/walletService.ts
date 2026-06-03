@@ -1,36 +1,55 @@
 import { apiClient } from './api';
 
-export interface RechargeDto {
-  amount: number;
-  currency: 'COP';
-}
-
 export const walletService = {
-  // Backend: GET /wallet/:professionalId (returns balance + transactions)
+
+  /** Obtener saldo operativo + historial de transacciones */
   getBalance: async (professionalId: string | number) => {
     try {
       const response = await apiClient.get(`/wallet/${professionalId}`);
-      return response.data; // { balance, transactions, currency }
+      return response.data;
     } catch {
       return { balance: 0, transactions: [], currency: 'COP' };
     }
   },
 
-  getTransactions: async (professionalId: string | number) => {
+  /** Obtener historial de transacciones directamente */
+  getTransactions: async (professionalId: string | number): Promise<any[]> => {
     try {
-      const response = await apiClient.get(`/wallet/${professionalId}`);
-      return response.data?.transactions || [];
+      const data = await walletService.getBalance(professionalId);
+      return data?.transactions || [];
     } catch {
       return [];
     }
   },
 
-  // Backend: POST /wallet/:professionalId/recharge  body: { amount }
-  recharge: async (professionalId: string | number, data: RechargeDto) => {
-    // Only COP supported as requested
-    const response = await apiClient.post(`/wallet/${professionalId}/recharge`, {
-      amount: data.amount,
+  /** Verificar si el profesional puede aceptar nuevas reservas */
+  canBook: async (professionalId: string | number): Promise<{ canBook: boolean; balance: number }> => {
+    try {
+      const response = await apiClient.get(`/wallet/${professionalId}/can-book`);
+      const data = response.data;
+      return data?.data ?? data;
+    } catch {
+      return { canBook: false, balance: 0 };
+    }
+  },
+
+  // ── Stripe Top-Up ──────────────────────────────────────────────────────────
+
+  /** Crear PaymentIntent en Stripe para recargar el saldo operativo */
+  createPaymentIntent: async (professionalId: string | number, amount: number) => {
+    const response = await apiClient.post('/payments/intent', {
+      amount,
+      currency: 'COP',
+      metadata: { professionalId: String(professionalId) },
     });
-    return response.data;
+    const data = response.data;
+    return data?.data || data; // { id, clientSecret, amount, currency, status }
+  },
+
+  /** Confirmar pago Stripe y acreditar saldo operativo */
+  confirmPayment: async (paymentIntentId: string) => {
+    const response = await apiClient.post('/payments/confirm', { paymentIntentId });
+    const data = response.data;
+    return data?.data || data; // { id, status, balance }
   },
 };
