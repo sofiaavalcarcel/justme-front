@@ -348,23 +348,111 @@ export function ProServices() {
 
 export function ProPortfolio() {
   const { t } = useTranslation();
+  const { professionalId } = useAuth();
+  const { notify } = useNotification();
+  const [images, setImages] = React.useState<any[]>([]);
+  const [loading, setLoading] = React.useState(true);
+  const [uploading, setUploading] = React.useState(false);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
+
+  const baseUrl = (import.meta.env.VITE_API_URL || 'http://localhost:3000/api').replace('/api', '');
+
+  const fetchImages = React.useCallback(async () => {
+    if (!professionalId) return;
+    setLoading(true);
+    try {
+      const data = await professionalsService.getProfessionalById(professionalId);
+      if (data && data.portfolioImages) {
+        // Sort by order or just set
+        setImages(data.portfolioImages);
+      }
+    } catch (error) {
+      console.warn('Failed to fetch portfolio', error);
+    } finally {
+      setLoading(false);
+    }
+  }, [professionalId]);
+
+  React.useEffect(() => {
+    fetchImages();
+  }, [fetchImages]);
+
+  const handleUploadClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0 || !professionalId) return;
+
+    setUploading(true);
+    try {
+      await professionalsService.uploadPortfolioImages(professionalId, Array.from(files));
+      notify('success', t('proSchedule.successMsg', 'Success'), t('sharedPages.pro.uploadSuccess', 'Imágenes subidas correctamente.'));
+      await fetchImages();
+    } catch (error: any) {
+      notify('error', 'Error', error?.response?.data?.message || 'Failed to upload images');
+    } finally {
+      setUploading(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  };
+
+  const handleDelete = async (imageId: string | number) => {
+    if (!professionalId || !confirm(t('sharedPages.pro.delConfirm', 'Are you sure you want to delete this?'))) return;
+    try {
+      await professionalsService.deletePortfolioImage(professionalId, imageId);
+      notify('success', 'Eliminado', 'Imagen eliminada correctamente.');
+      await fetchImages();
+    } catch (error: any) {
+      notify('error', 'Error', error?.response?.data?.message || 'Failed to delete image');
+    }
+  };
+
+  if (loading) return <div style={loadingCenter}><Loader size={28} style={{ animation: 'spin 0.8s linear infinite', color: 'var(--primary-500)' }} /></div>;
+
   return (
     <div style={pageStyle}>
       <div style={{ ...rowStyle, justifyContent: 'space-between', marginBottom: 'var(--space-5)' }}>
         <h1 style={{ ...headerStyle, marginBottom: 0 }}>{t('sharedPages.pro.portTitle')}</h1>
-        <Button size="sm" icon={<Plus size={16} />}>{t('sharedPages.pro.uploadBtn')}</Button>
+        <div>
+          <input 
+            type="file" 
+            multiple 
+            accept="image/*" 
+            ref={fileInputRef} 
+            onChange={handleFileChange} 
+            style={{ display: 'none' }} 
+          />
+          <Button size="sm" icon={<Plus size={16} />} onClick={handleUploadClick} disabled={uploading}>
+            {uploading ? t('common.loading', 'Cargando...') : t('sharedPages.pro.uploadBtn')}
+          </Button>
+        </div>
       </div>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: 'var(--space-3)' }}>
-        {Array.from({ length: 9 }, (_, i) => (
-          <motion.div key={i} initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: i * 0.05 }}
-            style={{ aspectRatio: '1', borderRadius: 'var(--radius-xl)', background: 'var(--neutral-100)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--neutral-300)', position: 'relative', overflow: 'hidden', cursor: 'pointer' }}>
-            <ImageIcon size={28} />
-            <div style={{ position: 'absolute', top: 8, right: 8 }}>
-              <Button size="sm" variant="ghost" icon={<Trash2 size={14} />} />
-            </div>
-          </motion.div>
-        ))}
-      </div>
+
+      {images.length === 0 ? (
+        <div style={{ textAlign: 'center', padding: '3rem', color: 'var(--neutral-400)' }}>
+          <ImageIcon size={40} style={{ opacity: 0.3, marginBottom: '12px' }} />
+          <p>{t('pro.noPortfolio', 'Aún no hay imágenes en tu portafolio.')}</p>
+        </div>
+      ) : (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: 'var(--space-3)' }}>
+          {images.map((img, i) => {
+            const imgSrc = img.imageUrl.startsWith('http') ? img.imageUrl : `${baseUrl}${img.imageUrl}`;
+            return (
+              <motion.div key={img.id || i} initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: i * 0.05 }}
+                style={{ aspectRatio: '1', borderRadius: 'var(--radius-xl)', background: 'var(--neutral-100)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--neutral-300)', position: 'relative', overflow: 'hidden' }}>
+                <img src={imgSrc} alt="Portfolio" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                <div style={{ position: 'absolute', top: 8, right: 8 }}>
+                  <Button size="sm" variant="ghost" icon={<Trash2 size={14} color="white" />} onClick={() => handleDelete(img.id)} style={{ background: 'rgba(0,0,0,0.5)', borderRadius: '50%' }} />
+                </div>
+              </motion.div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
