@@ -150,7 +150,7 @@ export function ProEarnings() {
   React.useEffect(() => {
     if (!professionalId) { setLoading(false); return; }
     walletService.getTransactions(professionalId)
-      .then(data => setTransactions(Array.isArray(data) ? data : (data?.data || [])))
+      .then((data: any) => setTransactions(Array.isArray(data) ? data : (data?.data || [])))
       .catch(() => setTransactions([]))
       .finally(() => setLoading(false));
   }, [professionalId]);
