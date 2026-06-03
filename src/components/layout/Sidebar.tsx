@@ -38,7 +38,7 @@ export function Sidebar({ isOpen = false, onClose }: SidebarProps) {
 
   const proLinks = [
     { to: '/professional', icon: <LayoutDashboard size={20} />, label: t('sidebar.links.dashboard') },
-    { to: '/professional/calendar', icon: <CalendarDays size={20} />, label: t('sidebar.links.calendar') },
+    { to: '/professional/appointments', icon: <CalendarDays size={20} />, label: t('sidebar.links.appointments', 'Citas') },
     { to: '/professional/wallet', icon: <Wallet size={20} />, label: t('sidebar.links.wallet') },
     { to: '/professional/services', icon: <Scissors size={20} />, label: t('sidebar.links.services') },
     { to: '/professional/portfolio', icon: <ImageIcon size={20} />, label: t('sidebar.links.portfolio') },
@@ -72,7 +72,6 @@ export function Sidebar({ isOpen = false, onClose }: SidebarProps) {
 
   const handleRoleSwitch = () => {
     if (role === 'user') {
-      // If user is not an approved professional, show the application modal
       if (verificationStatus !== 'approved') {
         setShowBecomeProModal(true);
         return;
@@ -101,28 +100,24 @@ export function Sidebar({ isOpen = false, onClose }: SidebarProps) {
     await refreshVerificationStatus();
   };
 
-  // Determine the switch button text
   const switchButtonText = role === 'user'
     ? (verificationStatus === 'approved' ? t('sidebar.actions.switchToPro') : t('sidebar.actions.becomePro'))
     : t('sidebar.actions.switchToClient');
 
   return (
     <>
-      {/* Mode Transition Overlay */}
       <ModeTransition
         targetMode={targetMode}
         isVisible={showModeTransition}
         onComplete={handleTransitionComplete}
       />
 
-      {/* Become Professional Modal */}
       <BecomeProfessionalModal
         isOpen={showBecomeProModal}
         onClose={() => setShowBecomeProModal(false)}
         onSuccess={handleBecomeProSuccess}
       />
 
-      {/* Mobile overlay */}
       {isOpen && <div className="sidebar-overlay" onClick={onClose} />}
 
       <aside className={`sidebar ${isOpen ? 'sidebar-open' : ''}`}>
@@ -158,7 +153,6 @@ export function Sidebar({ isOpen = false, onClose }: SidebarProps) {
         </nav>
 
         <div className="sidebar-footer">
-          {/* Role Switch Button */}
           {role !== 'admin' && (
             <button className="sidebar-role-switch" onClick={handleRoleSwitch}>
               <ArrowLeftRight size={16} />

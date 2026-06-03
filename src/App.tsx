@@ -25,6 +25,7 @@ import UserRewards from './pages/user/UserRewards';
 // Professional pages
 import ProDashboard from './pages/professional/ProDashboard';
 import ProWallet from './pages/professional/ProWallet';
+import ProAppointments from './pages/professional/ProAppointments';
 
 // Admin pages
 import AdminDashboard from './pages/admin/AdminDashboard';
@@ -80,8 +81,9 @@ function App() {
             <Route element={<ProtectedRoute allowedRoles={['professional', 'admin']} />}>
               <Route path="/professional" element={<AppLayout />}>
                 <Route index element={<ProDashboard />} />
+                <Route path="appointments" element={<ProAppointments />} />
                 <Route path="requests" element={<ProBookingRequests />} />
-                <Route path="calendar" element={<ProCalendar />} />
+                <Route path="calendar" element={<ProAppointments />} />
                 <Route path="earnings" element={<ProEarnings />} />
                 <Route path="wallet" element={<ProWallet />} />
                 <Route path="services" element={<ProServices />} />
