@@ -12,9 +12,9 @@ import './AdminDashboard.css';
 
 export default function AdminDashboard() {
   const { t } = useTranslation();
-  const { 
-    stats, activities, transactions, revenueChart, loading, 
-    activityMeta, transactionMeta, fetchActivities, fetchTransactions 
+  const {
+    stats, analytics, activities, transactions, revenueChart, loading, error,
+    activityMeta, transactionMeta, fetchActivities, fetchTransactions
   } = useAdminStats();
 
   const [txPage, setTxPage] = useState(1);
@@ -23,13 +23,19 @@ export default function AdminDashboard() {
   const [activityFilters, setActivityFilters] = useState({ type: '', startDate: '', endDate: '' });
   const [hoveredBar, setHoveredBar] = useState<number | null>(null);
 
+  const growthStr = (v: number | undefined) =>
+    v === undefined || v === null ? null : v >= 0 ? `+${v}%` : `${v}%`;
+
+  const fmt = (n: number) =>
+    new Intl.NumberFormat('es-CO', { notation: 'compact', maximumFractionDigits: 1 }).format(n);
+
   const kpis = stats ? [
-    { label: t('adminDash.totalUsers'), value: stats.totalUsers?.toLocaleString() ?? '0', icon: <Users size={20} />, color: 'var(--primary-500)', bg: 'var(--primary-50)', change: '+8.2%' },
-    { label: t('adminDash.professionals'), value: stats.totalProfessionals?.toLocaleString() ?? '0', icon: <Briefcase size={20} />, color: 'var(--accent-500)', bg: 'var(--accent-100)', change: '+5.1%' },
-    { label: t('adminDash.totalBookings'), value: stats.totalBookings?.toLocaleString() ?? '0', icon: <Activity size={20} />, color: 'var(--success-500)', bg: 'var(--success-50)', change: '+12.5%' },
-    { label: t('adminDash.revenue'), value: `$${((stats.totalRevenue ?? 0) / 1000).toFixed(0)}K`, icon: <DollarSign size={20} />, color: '#fbbf24', bg: '#fbbf2415', change: '+15.3%' },
-    { label: t('adminDash.commissions'), value: `$${((stats.commissionsCollected ?? 0) / 1000).toFixed(0)}K`, icon: <CreditCard size={20} />, color: 'var(--error-500)', bg: 'var(--error-50)', change: '+9.8%' },
-    { label: t('adminDash.activeServices'), value: stats.activeServices?.toString() ?? '—', icon: <BarChart3 size={20} />, color: '#06b6d4', bg: '#06b6d415', change: '—' },
+    { label: t('adminDash.totalUsers'), value: stats.totalUsers?.toLocaleString('es-CO') ?? '0', icon: <Users size={20} />, color: 'var(--primary-500)', bg: 'var(--primary-50)', change: growthStr(analytics?.monthlyGrowth) },
+    { label: t('adminDash.professionals'), value: stats.totalProfessionals?.toLocaleString('es-CO') ?? '0', icon: <Briefcase size={20} />, color: 'var(--accent-500)', bg: 'var(--accent-100)', change: null },
+    { label: t('adminDash.totalBookings'), value: stats.totalBookings?.toLocaleString('es-CO') ?? '0', icon: <Activity size={20} />, color: 'var(--success-500)', bg: 'var(--success-50)', change: growthStr(analytics?.bookingRate) },
+    { label: t('adminDash.revenue'), value: `$${fmt(stats.totalRevenue ?? 0)}`, icon: <DollarSign size={20} />, color: '#fbbf24', bg: '#fbbf2415', change: null },
+    { label: t('adminDash.commissions'), value: `$${fmt(stats.commissionsCollected ?? 0)}`, icon: <CreditCard size={20} />, color: 'var(--error-500)', bg: 'var(--error-50)', change: null },
+    { label: t('adminDash.activeServices'), value: stats.activeServices?.toLocaleString('es-CO') ?? '—', icon: <BarChart3 size={20} />, color: '#06b6d4', bg: '#06b6d415', change: null },
   ] : [];
 
   const handleTxPageChange = (newPage: number) => {
@@ -46,6 +52,15 @@ export default function AdminDashboard() {
     setModalPage(1);
     fetchActivities(1, 10, activityFilters);
   };
+
+  if (error) {
+    return (
+      <div className="admin-dash" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', minHeight: '300px', gap: 12 }}>
+        <ShieldCheck size={32} style={{ color: 'var(--error-500)', opacity: 0.6 }} />
+        <p style={{ color: 'var(--error-500)', fontWeight: 500 }}>{error}</p>
+      </div>
+    );
+  }
 
   if (loading) {
     return (
@@ -72,9 +87,11 @@ export default function AdminDashboard() {
             <Card variant="default" padding="md" className="admin-kpi-card">
               <div className="kpi-top">
                 <div className="kpi-icon" style={{ color: kpi.color, background: kpi.bg }}>{kpi.icon}</div>
-                <span className="kpi-change" style={{ color: kpi.change.startsWith('+') ? 'var(--success-500)' : 'var(--neutral-400)' }}>
-                  <TrendingUp size={13} /> {kpi.change}
-                </span>
+                {kpi.change !== null && (
+                  <span className="kpi-change" style={{ color: kpi.change && kpi.change.startsWith('+') ? 'var(--success-500)' : 'var(--neutral-400)' }}>
+                    <TrendingUp size={13} /> {kpi.change}
+                  </span>
+                )}
               </div>
               <span className="kpi-value">{kpi.value}</span>
               <span className="kpi-label">{kpi.label}</span>
@@ -88,7 +105,7 @@ export default function AdminDashboard() {
         <div className="chart-header">
           <div>
             <h2>{t('adminDash.revenueSummary')}</h2>
-            <p className="chart-subtitle">Últimos 12 meses · Reservas completadas</p>
+          <p className="chart-subtitle">Últimos 12 meses · Pagos completados</p>
           </div>
           <div className="chart-legend">
             <div className="legend-item"><span className="dot" /> Ingresos</div>
@@ -258,7 +275,7 @@ export default function AdminDashboard() {
           </div>
 
           <div className="modal-pagination">
-             <Button size="sm" variant="ghost" disabled={modalPage <= 1} onClick={() => { setModalPage(modalPage-1); fetchActivities(modalPage-1, 10, activityFilters); }}>{t('appointments.upcoming')}</Button>
+             <Button size="sm" variant="ghost" disabled={modalPage <= 1} onClick={() => { setModalPage(modalPage-1); fetchActivities(modalPage-1, 10, activityFilters); }}>Anterior</Button>
              <span>{modalPage} / {activityMeta?.totalPages || 1}</span>
              <Button size="sm" variant="ghost" disabled={modalPage >= (activityMeta?.totalPages || 1)} onClick={() => { setModalPage(modalPage+1); fetchActivities(modalPage+1, 10, activityFilters); }}>Siguiente</Button>
           </div>

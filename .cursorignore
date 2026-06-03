@@ -1,0 +1,39 @@
+# Dependencies
+node_modules/
+
+# Builds
+dist/
+dist-ssr/
+build/
+
+# Coverage and cache
+coverage/
+.cache/
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# Media and bin
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.svg
+*.pdf
+*.zip
+
+# System & IDEs
+.DS_Store
+.idea/
+.vscode/
+
+# Lock files
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Local envs
+.env*.local
+.env
