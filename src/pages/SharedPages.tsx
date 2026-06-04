@@ -209,7 +209,7 @@ export function ProServices() {
   const { t } = useTranslation();
 
   const fetchServices = async () => {
-    if (!professionalId) return;
+    if (!professionalId) { setLoading(false); return; }
     setLoading(true);
     try {
       const data = await professionalsService.getServices(professionalId);
@@ -297,7 +297,7 @@ export function ProServices() {
     }
   };
 
-  const isBlocked = verificationStatus !== 'approved';
+  const isBlocked = verificationStatus === 'rejected';
 
   if (loading) return <div style={loadingCenter}><Loader size={28} style={{ animation: 'spin 0.8s linear infinite', color: 'var(--primary-500)' }} /></div>;
 
@@ -421,7 +421,7 @@ export function ProPortfolio() {
   const baseUrl = (import.meta.env.VITE_API_URL || 'http://localhost:3000/api').replace('/api', '');
 
   const fetchImages = React.useCallback(async () => {
-    if (!professionalId) return;
+    if (!professionalId) { setLoading(false); return; }
     setLoading(true);
     try {
       const data = await professionalsService.getProfessionalById(professionalId);
@@ -650,7 +650,7 @@ export function ProReviews() {
   const { t, i18n } = useTranslation();
 
   React.useEffect(() => {
-    if (!professionalId) return;
+    if (!professionalId) { setLoading(false); return; }
     professionalsService.getReviews(professionalId)
       .then(data => {
         const list = Array.isArray(data) ? data : [];
