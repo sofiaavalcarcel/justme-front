@@ -112,10 +112,10 @@ export const ProProfileDetail: React.FC<ProProfileDetailProps> = ({ professional
                 exit={{ opacity: 0, x: -20 }}
                 className="services-list"
               >
-                {professional.professionalServices?.map((ps: any) => (
+                {professional.professionalServices?.filter((ps: any) => ps.isActive !== false).map((ps: any) => (
                   <div key={ps.id} className="service-card informational">
                     <div className="service-info">
-                      <h4>{ps.service?.name}</h4>
+                      <h4>{ps.name || ps.service?.name}</h4>
                       <p>{ps.description || t('pro.noDescription')}</p>
                       <div className="service-meta">
                         <span className="service-price">${Number(ps.price).toLocaleString()}</span>
