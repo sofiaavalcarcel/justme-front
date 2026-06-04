@@ -3,7 +3,7 @@ import { NavLink, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard, Users, Briefcase, BarChart3, Settings, LogOut,
   Scissors, CalendarDays, Wallet, Star, Image as ImageIcon,
-  Search, Heart, CreditCard, Home, UserCircle, ShieldCheck, FileText, Sparkles,
+  Search, CreditCard, Home, UserCircle, ShieldCheck, FileText, Sparkles,
   ArrowLeftRight, Clock, X, Gift
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
@@ -30,7 +30,6 @@ export function Sidebar({ isOpen = false, onClose }: SidebarProps) {
     { to: '/user', icon: <Home size={20} />, label: t('sidebar.links.home') },
     { to: '/user/search', icon: <Search size={20} />, label: t('sidebar.links.search') },
     { to: '/user/appointments', icon: <CalendarDays size={20} />, label: t('sidebar.links.appointments') },
-    { to: '/user/favorites', icon: <Heart size={20} />, label: t('sidebar.links.favorites') },
     { to: '/user/payments', icon: <CreditCard size={20} />, label: t('sidebar.links.payments') },
     { to: '/user/rewards', icon: <Gift size={20} />, label: t('sidebar.links.rewards') },
     { to: '/user/profile', icon: <UserCircle size={20} />, label: t('sidebar.links.profile') },

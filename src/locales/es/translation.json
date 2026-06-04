@@ -299,6 +299,18 @@
       "confirmed": "Confirmada",
       "completed": "Completada",
       "cancelled": "Cancelada"
+    },
+    "review": {
+      "title": "Calificar servicio",
+      "desc": "Cuéntanos tu experiencia con {{professional}} para ayudar a otros usuarios.",
+      "ratingLabel": "Calidad del servicio",
+      "commentLabel": "Tu reseña",
+      "commentPlaceholder": "Escribe aquí tu opinión sobre el servicio...",
+      "submit": "Enviar Reseña",
+      "success": "¡Reseña enviada!",
+      "successMsg": "Gracias por compartir tu opinión.",
+      "error": "No se pudo enviar la reseña.",
+      "alreadyReviewed": "Reseña enviada"
     }
   },
   "userProfile": {
@@ -393,6 +405,8 @@
       "prev": "Anterior",
       "next": "Siguiente",
       "revTitle": "Reseñas",
+      "revDetail": "Detalle de Reseña",
+      "comment": "Comentario",
       "basedOn": "Basado en {{count}} reseñas",
       "noRev": "Aún no hay reseñas"
     },
