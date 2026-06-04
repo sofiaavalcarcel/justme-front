@@ -32,7 +32,7 @@ import AdminDashboard from './pages/admin/AdminDashboard';
 
 // Shared sub-pages
 import {
-  ProBookingRequests, ProCalendar, ProEarnings, ProServices, ProPortfolio, ProProfileEditor, ProReviews,
+  ProBookingRequests, ProEarnings, ProServices, ProPortfolio, ProProfileEditor, ProReviews,
   AdminUsers, AdminProfessionals, AdminServices, AdminTransactions, AdminAnalytics, AdminSettings, AdminProfile, AdminBookings, AdminAi,
   UserFavorites, UserPayments,
 } from './pages/SharedPages';

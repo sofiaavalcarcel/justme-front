@@ -114,7 +114,8 @@ export function AdminUsersTable() {
                           <Avatar src={user.avatar || undefined} name={user.name} size="md" />
                           <div>
                             <p style={{ fontWeight: 600, color: 'var(--neutral-900)', fontSize: 'var(--text-sm)' }}>{user.name} {user.lastName}</p>
-                            <p style={{ fontSize: 'var(--text-xs)', color: 'var(--neutral-500)' }}>{user.email}</p>
+                            <p style={{ fontSize: 'var(--text-xs)', color: 'var(--neutral-500)', margin: 0 }}>{user.email}</p>
+                            <p style={{ fontSize: 'var(--text-xs)', color: 'var(--neutral-400)', fontFamily: 'monospace', margin: 0 }}>ID: {user.id}</p>
                           </div>
                         </div>
                       </td>

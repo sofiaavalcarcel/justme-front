@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Users, Briefcase, CreditCard, TrendingUp, DollarSign, Activity, 
   BarChart3, ShieldCheck, Loader, UserPlus, Calendar, Search, 
-  ChevronLeft, ChevronRight, SlidersHorizontal, ArrowUpRight, ArrowDownLeft, Percent
+  ChevronLeft, ChevronRight, SlidersHorizontal, ArrowUpRight, ArrowDownLeft
 } from 'lucide-react';
 import { Card, Badge, Avatar, Button, Modal } from '../../components/ui';
 import { useAdminStats } from '../../hooks/useAdminStats';
@@ -33,8 +33,7 @@ export default function AdminDashboard() {
     { label: t('adminDash.totalUsers'), value: stats.totalUsers?.toLocaleString('es-CO') ?? '0', icon: <Users size={20} />, color: 'var(--primary-500)', bg: 'var(--primary-50)', change: growthStr(analytics?.monthlyGrowth) },
     { label: t('adminDash.professionals'), value: stats.totalProfessionals?.toLocaleString('es-CO') ?? '0', icon: <Briefcase size={20} />, color: 'var(--accent-500)', bg: 'var(--accent-100)', change: null },
     { label: t('adminDash.totalBookings'), value: stats.totalBookings?.toLocaleString('es-CO') ?? '0', icon: <Activity size={20} />, color: 'var(--success-500)', bg: 'var(--success-50)', change: growthStr(analytics?.bookingRate) },
-    { label: t('adminDash.revenue'), value: `$${fmt(stats.totalRevenue ?? 0)}`, icon: <DollarSign size={20} />, color: '#fbbf24', bg: '#fbbf2415', change: null },
-    { label: t('adminDash.commissions'), value: `$${fmt(stats.commissionsCollected ?? 0)}`, icon: <CreditCard size={20} />, color: 'var(--error-500)', bg: 'var(--error-50)', change: null },
+    { label: t('adminDash.commissions'), value: `$${fmt(stats.commissionsCollected ?? 0)}`, icon: <CreditCard size={20} />, color: 'var(--success-500)', bg: 'var(--success-50)', change: null },
     { label: t('adminDash.activeServices'), value: stats.activeServices?.toLocaleString('es-CO') ?? '—', icon: <BarChart3 size={20} />, color: '#06b6d4', bg: '#06b6d415', change: null },
   ] : [];
 
@@ -105,10 +104,10 @@ export default function AdminDashboard() {
         <div className="chart-header">
           <div>
             <h2>{t('adminDash.revenueSummary')}</h2>
-          <p className="chart-subtitle">Últimos 12 meses · Pagos completados</p>
+            <p className="chart-subtitle">Últimos 12 meses · Comisiones cobradas</p>
           </div>
           <div className="chart-legend">
-            <div className="legend-item"><span className="dot" /> Ingresos</div>
+            <div className="legend-item"><span className="dot" style={{ backgroundColor: 'var(--success-500)' }} /> Comisiones</div>
           </div>
         </div>
         
@@ -140,7 +139,7 @@ export default function AdminDashboard() {
                     <motion.div className="chart-bar-wrapper">
                        <motion.div className="chart-bar"
                         initial={{ height: 0 }} 
-                        animate={{ height: `${h}%`, backgroundColor: isHovered ? 'var(--primary-600)' : 'var(--primary-500)' }}
+                        animate={{ height: `${h}%`, backgroundColor: isHovered ? 'var(--success-600)' : 'var(--success-500)' }}
                         style={{ opacity: m.revenue === 0 ? 0.2 : 1 }}
                         transition={{ type: 'spring', damping: 20, stiffness: 200 }} />
                     </motion.div>
@@ -206,25 +205,27 @@ export default function AdminDashboard() {
                 <CreditCard size={32} opacity={0.3} />
                 {t('adminDash.noTx')}
               </div>
-            ) : transactions.map((t: any) => (
-              <motion.div key={t.id} initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} className="admin-row">
-                <div className={`admin-transaction-icon ${t.type}`}>
-                  {t.type === 'payment' ? <ArrowDownLeft size={18} /> : 
-                   t.type === 'payout' ? <ArrowUpRight size={18} /> :
-                   <Percent size={18} />}
-                </div>
-                <div className="admin-row-info">
-                  <p className="admin-row-name">{t.description ?? t('adminDash.transaction')}</p>
-                  <p className="admin-row-detail">{new Date(t.createdAt ?? t.date).toLocaleDateString()} • <span style={{ textTransform: 'capitalize' }}>{t.type}</span></p>
-                </div>
-                <div style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4 }}>
-                  <span className={`admin-amount ${t.type === 'commission' || t.type === 'payment' ? 'positive' : 'negative'}`}>
-                    {t.type === 'commission' || t.type === 'payment' ? '+' : '-'}${Math.abs(parseFloat(t.amount)).toLocaleString()}
-                  </span>
-                  <Badge variant={t.status === 'completed' ? 'success' : 'warning'} size="sm">{t.status}</Badge>
-                </div>
-              </motion.div>
-            ))}
+            ) : transactions.map((t: any) => {
+              const tType = (t.type || '').toUpperCase();
+              const isPositive = tType === 'COMMISSION' || tType === 'TOP_UP' || tType === 'BONUS' || tType === 'PAYMENT';
+              return (
+                <motion.div key={t.id} initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} className="admin-row">
+                  <div className={`admin-transaction-icon ${t.type.toLowerCase()}`}>
+                    {isPositive ? <ArrowDownLeft size={18} /> : <ArrowUpRight size={18} />}
+                  </div>
+                  <div className="admin-row-info">
+                    <p className="admin-row-name">{t.description ?? t('adminDash.transaction')}</p>
+                    <p className="admin-row-detail">{new Date(t.createdAt ?? t.date).toLocaleDateString()} • <span style={{ textTransform: 'capitalize' }}>{t.type.toLowerCase().replace('_', ' ')}</span></p>
+                  </div>
+                  <div style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4 }}>
+                    <span className={`admin-amount ${isPositive ? 'positive' : 'negative'}`}>
+                      {isPositive ? '+' : '-'}${Math.abs(parseFloat(t.amount)).toLocaleString()}
+                    </span>
+                    <Badge variant={t.status === 'completed' ? 'success' : 'warning'} size="sm">{t.status}</Badge>
+                  </div>
+                </motion.div>
+              );
+            })}
           </div>
         </section>
       </div>
