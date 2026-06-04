@@ -14,6 +14,7 @@ export interface Booking {
   startTime?: string;
   price: number;
   locationType: string;
+  review?: any;
 }
 
 export function useBookings() {
@@ -46,6 +47,7 @@ export function useBookings() {
           startTime: item.startTime,
           price: item.price ? parseFloat(item.price) : 0,
           locationType: item.locationType || 'professional',
+          review: item.review,
         };
       });
       

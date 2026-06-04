@@ -4,7 +4,7 @@ import React, { useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { Card, Badge, Button, Avatar, Rating } from '../components/ui';
 import { Modal } from '../components/ui/Modal';
-import { Home, DollarSign, Plus, Scissors, Edit, Image as ImageIcon, Trash2, Star, MapPin, Clock, Loader } from 'lucide-react';
+import { Home, DollarSign, Plus, Scissors, Edit, Image as ImageIcon, Trash2, Star, MapPin, Clock, Loader, Eye, Calendar } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useNotification } from '../context/NotificationContext';
 import { bookingService } from '../services/bookingService';
@@ -583,8 +583,8 @@ export function ProReviews() {
   const { professionalId } = useAuth();
   const [reviews, setReviews] = React.useState<any[]>([]);
   const [loading, setLoading] = React.useState(true);
-  const [stats, setStats] = React.useState({ avg: 0, count: 0 });
-  const { t } = useTranslation();
+  const [selectedReview, setSelectedReview] = React.useState<any>(null);
+  const { t, i18n } = useTranslation();
 
   React.useEffect(() => {
     if (!professionalId) return;
@@ -592,10 +592,6 @@ export function ProReviews() {
       .then(data => {
         const list = Array.isArray(data) ? data : [];
         setReviews(list);
-        if (list.length > 0) {
-          const avg = list.reduce((s: number, r: any) => s + (r.rating || 0), 0) / list.length;
-          setStats({ avg, count: list.length });
-        }
       })
       .catch(() => setReviews([]))
       .finally(() => setLoading(false));
@@ -606,39 +602,110 @@ export function ProReviews() {
   return (
     <div style={pageStyle}>
       <h1 style={headerStyle}>{t('sharedPages.pro.revTitle')}</h1>
-      <Card variant="glass" padding="md">
-        <div style={{ marginBottom: 'var(--space-5)', display: 'flex', alignItems: 'center', gap: 'var(--space-6)', justifyContent: 'center' }}>
-          <div style={{ textAlign: 'center' }}>
-            <p style={{ fontFamily: 'var(--font-display)', fontSize: 'var(--text-4xl)', fontWeight: 800 }}>{stats.avg.toFixed(1)}</p>
-            <Rating value={stats.avg} size="md" />
-            <p style={subStyle}>{t('sharedPages.pro.basedOn', { count: stats.count })}</p>
-          </div>
-        </div>
-      </Card>
+      
       {reviews.length === 0 ? (
         <div style={{ textAlign: 'center', padding: '3rem', color: 'var(--neutral-400)' }}>
           <Star size={40} style={{ opacity: 0.3, marginBottom: '12px' }} />
           <p>{t('sharedPages.pro.noRev')}</p>
         </div>
       ) : (
-        <div style={{ ...listStyle, marginTop: 'var(--space-4)' }}>
-          {reviews.map((r: any, i: number) => (
-            <motion.div key={r.id || i} initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.06 }}>
-              <Card variant="default" padding="md">
-                <div style={{ ...rowStyle, marginBottom: 'var(--space-2)' }}>
-                  <Avatar src={r.userAvatar || r.user?.avatar} name={r.userName || r.user?.name || 'User'} size="sm" />
-                  <div style={flexStyle}>
-                    <p style={{ fontWeight: 600, fontSize: 'var(--text-sm)' }}>{r.userName || r.user?.name || 'User'}</p>
-                    <p style={subStyle}>{r.date || new Date(r.createdAt).toLocaleDateString()}</p>
+        <div style={{ 
+          display: 'grid', 
+          gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', 
+          gap: 'var(--space-4)', 
+          marginTop: 'var(--space-4)' 
+        }}>
+          {reviews.map((r: any, i: number) => {
+            const userName = r.userName || r.user?.name || 'User';
+            const serviceName = r.booking?.professionalService?.name || t('common.notAvailable', 'No disponible');
+            const dateStr = new Date(r.createdAt).toLocaleDateString(i18n.language, { weekday: 'short', month: 'short', day: 'numeric' });
+            
+            return (
+              <motion.div key={r.id || i} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.08 }} style={{ height: '100%' }}>
+                <Card variant="default" padding="md" hover style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)', height: '100%' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
+                    <Avatar src={r.userAvatar || r.user?.avatar} name={userName} size="md" />
+                    <div style={{ flex: 1 }}>
+                      <h3 style={{ fontSize: 'var(--text-sm)', fontWeight: 700 }}>{userName}</h3>
+                      <p style={{ fontSize: 'var(--text-xs)', color: 'var(--neutral-500)' }}>{serviceName}</p>
+                    </div>
+                    <Rating value={r.rating || 0} size="sm" />
                   </div>
-                  <Rating value={r.rating || 0} size="sm" />
-                </div>
-                <p style={{ fontSize: 'var(--text-sm)', color: 'var(--neutral-600)', lineHeight: 'var(--leading-relaxed)' }}>{r.comment || r.text}</p>
-              </Card>
-            </motion.div>
-          ))}
+                  
+                  <div style={{ display: 'flex', gap: 'var(--space-4)', fontSize: 'var(--text-xs)', color: 'var(--neutral-500)', flexWrap: 'wrap' }}>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
+                      <Calendar size={14} /> {dateStr}
+                    </span>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
+                      <Clock size={14} /> {new Date(r.createdAt).toLocaleTimeString(i18n.language, { hour: '2-digit', minute: '2-digit' })}
+                    </span>
+                  </div>
+
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: 'var(--space-3)', borderTop: '1px solid var(--neutral-100)' }}>
+                    <p style={{ fontSize: 'var(--text-sm)', color: 'var(--neutral-600)', lineHeight: 'var(--leading-relaxed)', flex: 1, marginRight: 'var(--space-4)' }}>
+                      {r.comment || r.text}
+                    </p>
+                    <Button 
+                      size="sm" 
+                      variant="ghost" 
+                      icon={<Eye size={16} />} 
+                      onClick={() => setSelectedReview(r)}
+                      style={{ padding: 'var(--space-1)', minWidth: 'auto' }}
+                    />
+                  </div>
+                </Card>
+              </motion.div>
+            );
+          })}
         </div>
       )}
+
+      {/* Review Detail Modal */}
+      <Modal 
+        isOpen={!!selectedReview} 
+        onClose={() => setSelectedReview(null)} 
+        title={t('sharedPages.pro.revDetail', 'Detalle de Reseña')}
+      >
+        {selectedReview && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)', minWidth: '320px', padding: 'var(--space-2)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-4)' }}>
+              <Avatar src={selectedReview.userAvatar || selectedReview.user?.avatar} name={selectedReview.userName || selectedReview.user?.name || 'User'} size="lg" />
+              <div>
+                <h3 style={{ fontSize: 'var(--text-base)', fontWeight: 700 }}>{selectedReview.userName || selectedReview.user?.name || 'User'}</h3>
+                <Rating value={selectedReview.rating || 0} size="sm" />
+              </div>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 'var(--space-3)', background: 'var(--neutral-50)', padding: 'var(--space-3)', borderRadius: 'var(--radius-lg)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', fontSize: 'var(--text-xs)', color: 'var(--neutral-600)' }}>
+                <Calendar size={14} />
+                <span>
+                  {new Date(selectedReview.createdAt).toLocaleDateString(i18n.language, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+                </span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', fontSize: 'var(--text-xs)', color: 'var(--neutral-600)' }}>
+                <Scissors size={14} />
+                <span>
+                  {selectedReview.booking?.professionalService?.name || t('common.notAvailable', 'No disponible')}
+                </span>
+              </div>
+            </div>
+
+            <div>
+              <p style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--neutral-400)', textTransform: 'uppercase', marginBottom: '4px' }}>
+                {t('sharedPages.pro.comment', 'Comentario')}
+              </p>
+              <p style={{ fontSize: 'var(--text-sm)', color: 'var(--neutral-700)', lineHeight: 'var(--leading-relaxed)' }}>
+                {selectedReview.comment || selectedReview.text}
+              </p>
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 'var(--space-2)' }}>
+              <Button onClick={() => setSelectedReview(null)}>{t('common.close', 'Cerrar')}</Button>
+            </div>
+          </div>
+        )}
+      </Modal>
     </div>
   );
 }

@@ -1,11 +1,12 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Calendar, Clock, MapPin, Loader, X, AlertTriangle } from 'lucide-react';
-import { Tabs, Card, Avatar, Badge, Button } from '../../components/ui';
+import { Calendar, Clock, MapPin, Loader, X, AlertTriangle, Star } from 'lucide-react';
+import { Tabs, Card, Avatar, Badge, Button, Rating } from '../../components/ui';
 import { DatePicker } from '../../components/ui/DatePicker';
 import { ClockPicker } from '../../components/ui/ClockPicker';
 import { useBookings } from '../../hooks/useBookings';
 import { bookingService } from '../../services/bookingService';
+import { reviewService } from '../../services/reviewService';
 import { useNotification } from '../../context/NotificationContext';
 import { useTranslation } from 'react-i18next';
 import './Appointments.css';
@@ -25,6 +26,12 @@ export default function Appointments() {
   const [rescheduleDate, setRescheduleDate] = useState('');
   const [rescheduleTime, setRescheduleTime] = useState('');
   const [rescheduleLoading, setRescheduleLoading] = useState(false);
+
+  // Review modal state
+  const [reviewTarget, setReviewTarget] = useState<any>(null);
+  const [reviewRating, setReviewRating] = useState(0);
+  const [reviewComment, setReviewComment] = useState('');
+  const [reviewLoading, setReviewLoading] = useState(false);
 
   // Pagination Logic
   const [currentPage, setCurrentPage] = useState(1);
@@ -87,6 +94,28 @@ export default function Appointments() {
     }
   };
 
+  const handleReviewSubmit = async () => {
+    if (!reviewTarget || reviewRating === 0) return;
+    setReviewLoading(true);
+    try {
+      await reviewService.createReview({
+        professionalId: reviewTarget.professionalId,
+        bookingId: reviewTarget.id,
+        rating: reviewRating,
+        comment: reviewComment,
+      });
+      notify('success', t('appointments.review.success'), t('appointments.review.successMsg'));
+      setReviewTarget(null);
+      setReviewRating(0);
+      setReviewComment('');
+      refetch();
+    } catch (err: any) {
+      notify('error', t('appointments.errorTitle'), err?.response?.data?.message || t('appointments.review.error'));
+    } finally {
+      setReviewLoading(false);
+    }
+  };
+
   const convertTo24h = (time12h: string) => {
     if (!time12h) return '00:00';
     const [time, modifier] = time12h.split(' ');
@@ -146,7 +175,18 @@ export default function Appointments() {
                     <Button size="sm" variant="danger" onClick={() => setCancelTarget(b)}>{t('appointments.cancel')}</Button>
                   </div>
                 )}
-                {b.status === 'completed' && <Button size="sm" variant="secondary">{t('appointments.leaveReview')}</Button>}
+                {b.status === 'completed' && (
+                  b.review ? (
+                    <Badge variant="default" size="md">
+                      <Star size={12} style={{ marginRight: 4 }} />
+                      {t('appointments.review.alreadyReviewed')}
+                    </Badge>
+                  ) : (
+                    <Button size="sm" variant="secondary" onClick={() => setReviewTarget(b)}>
+                      {t('appointments.leaveReview')}
+                    </Button>
+                  )
+                )}
               </div>
             </Card>
           </motion.div>
@@ -248,6 +288,53 @@ export default function Appointments() {
               <div className="appt-modal-actions">
                 <Button variant="ghost" onClick={() => setRescheduleTarget(null)} disabled={rescheduleLoading}>{t('appointments.cancelBtn')}</Button>
                 <Button onClick={handleReschedule} loading={rescheduleLoading} disabled={!rescheduleDate || !rescheduleTime}>{t('appointments.confirmReschedule')}</Button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ───── Review Modal ───── */}
+      <AnimatePresence>
+        {reviewTarget && (
+          <motion.div className="appt-modal-overlay" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => !reviewLoading && setReviewTarget(null)}>
+            <motion.div
+              className="appt-modal"
+              initial={{ scale: 0.85, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.85, opacity: 0 }}
+              transition={{ type: 'spring', stiffness: 300, damping: 25 }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <button className="appt-modal-close" onClick={() => setReviewTarget(null)} disabled={reviewLoading}><X size={20} /></button>
+              <div className="appt-modal-icon review-icon">
+                <Star size={32} />
+              </div>
+              <h2>{t('appointments.review.title')}</h2>
+              <p className="appt-modal-desc">{t('appointments.review.desc', { professional: reviewTarget.professionalName })}</p>
+
+              <div className="review-form">
+                <div className="review-field">
+                  <label>{t('appointments.review.ratingLabel')}</label>
+                  <div style={{ display: 'flex', justifyContent: 'center', margin: 'var(--space-2) 0' }}>
+                    <Rating value={reviewRating} size="lg" onChange={setReviewRating} />
+                  </div>
+                </div>
+                <div className="review-field">
+                  <label>{t('appointments.review.commentLabel')}</label>
+                  <textarea
+                    value={reviewComment}
+                    onChange={(e) => setReviewComment(e.target.value)}
+                    placeholder={t('appointments.review.commentPlaceholder')}
+                    rows={4}
+                    className="review-textarea"
+                  />
+                </div>
+              </div>
+
+              <div className="appt-modal-actions">
+                <Button variant="ghost" onClick={() => setReviewTarget(null)} disabled={reviewLoading}>{t('appointments.review.cancelBtn', 'Cancelar')}</Button>
+                <Button onClick={handleReviewSubmit} loading={reviewLoading} disabled={reviewRating === 0}>{t('appointments.review.submit')}</Button>
               </div>
             </motion.div>
           </motion.div>
