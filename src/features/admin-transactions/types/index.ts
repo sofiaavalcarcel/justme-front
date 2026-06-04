@@ -1,7 +1,7 @@
 export interface Transaction {
   id: string;
   description: string;
-  type: 'payment' | 'payout' | 'refund' | 'commission';
+  type: 'payment' | 'payout' | 'refund' | 'commission' | 'COMMISSION' | 'TOP_UP' | 'ADJUSTMENT' | 'REFUND' | 'BONUS';
   amount: number;
   currency: string;
   status: 'completed' | 'pending' | 'failed';
@@ -10,6 +10,21 @@ export interface Transaction {
     id: string;
     name: string;
     avatar?: string;
+  };
+  wallet?: {
+    id: number;
+    professionalId: number;
+    professional?: {
+      id: number;
+      userId: number;
+      user?: {
+        id: number;
+        name: string;
+        lastName: string;
+        email: string;
+        avatar?: string;
+      };
+    };
   };
 }
 
