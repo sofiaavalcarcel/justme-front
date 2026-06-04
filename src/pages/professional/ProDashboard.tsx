@@ -196,9 +196,12 @@ export default function ProDashboard() {
 
       {/* Appointments Section */}
       <section className="pro-all-appts">
-        <div className="pro-all-appts-header">
+        <div className="pro-all-appts-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <h2>{t('proDash.allAppointments')}</h2>
-          <span className="pro-appt-count">{appointments.length} {t('proDash.totalLabel')}</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
+            <span className="pro-appt-count">{appointments.length} {t('proDash.totalLabel')}</span>
+            <Button size="sm" variant="ghost" onClick={() => navigate('/professional/appointments')}>{t('userHome.seeAll')}</Button>
+          </div>
         </div>
         <Tabs
           tabs={[

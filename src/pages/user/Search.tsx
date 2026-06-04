@@ -87,8 +87,10 @@ export default function SearchPage() {
   const [panelExpanded, setPanelExpanded] = useState(true);
 
   // Booking
-  // Booking
   const [bookingLoading, setBookingLoading] = useState(false);
+  const [availableSlots, setAvailableSlots] = useState<string[]>([]);
+  const [slotsLoading, setSlotsLoading] = useState(false);
+  const [selectedBookingTime, setSelectedBookingTime] = useState(''); // time chosen in booking panel
 
   const [backendPros, setBackendPros] = useState<any[]>([]);
   const [loadingPros, setLoadingPros] = useState(false);
@@ -178,8 +180,10 @@ export default function SearchPage() {
     setPanelExpanded(true);
   };
 
-  const convertTo24h = (time12h: string) => {
-    if (!time12h) return undefined;
+  const convertTo24h = (time12h: string): string => {
+    if (!time12h) return '';
+    // Already 24h format (HH:MM) — no AM/PM modifier
+    if (!time12h.includes('AM') && !time12h.includes('PM')) return time12h;
     const [time, modifier] = time12h.split(' ');
     let [hours, minutes] = time.split(':');
     if (modifier === 'PM' && hours !== '12') hours = String(parseInt(hours, 10) + 12);
@@ -206,6 +210,8 @@ export default function SearchPage() {
   };
   const handleStartBooking = async (id: string) => {
     setSelectedProId(id);
+    setAvailableSlots([]);
+    setSelectedBookingTime(selectedTime ? convertTo24h(selectedTime) : '');
     const pro = favorites.find(p => String(p.id) === id) || nearby.find(p => String(p.id) === id);
     
     setPhase('booking');
@@ -218,26 +224,56 @@ export default function SearchPage() {
       );
       const duration = matchSvc?.duration || 60;
       
-      await scheduleService.getAvailableSlots(Number(id), selectedDate, duration);
+      setSlotsLoading(true);
+      const slotsData = await scheduleService.getAvailableSlots(Number(id), selectedDate, duration);
+      // Slots can be an array of strings or objects with { time, available }
+      const parsedSlots: string[] = Array.isArray(slotsData)
+        ? slotsData
+            .filter((s: any) => (typeof s === 'string') || s.available !== false)
+            .map((s: any) => typeof s === 'string' ? s : s.time)
+        : [];
+      setAvailableSlots(parsedSlots);
+      // If the pre-selected time is valid keep it selected
+      if (selectedTime && parsedSlots.length > 0) {
+        const t24 = convertTo24h(selectedTime);
+        setSelectedBookingTime(parsedSlots.includes(t24) ? t24 : (parsedSlots[0] ?? ''));
+      } else if (parsedSlots.length > 0) {
+        setSelectedBookingTime(parsedSlots[0] ?? '');
+      }
     } catch (e) {
       console.error('Failed to fetch slots', e);
+      // Fallback: keep the pre-selected time
+    } finally {
+      setSlotsLoading(false);
     }
   };
 
   const handleConfirmBooking = async () => {
     if (!selectedPro) return;
+    const timeToBook = selectedBookingTime || convertTo24h(selectedTime);
+    if (!timeToBook) {
+      notify('error', t('search.errorAlert'), 'Por favor selecciona un horario.');
+      return;
+    }
     setBookingLoading(true);
     try {
+      // Resolve the correct professional service id
       const matchSvc = selectedPro.professionalServices?.find((ps: any) => 
-        ps.service?.name === selectedService || ps.service?.category === selectedService
+        ps.service?.name === selectedService || 
+        ps.name === selectedService || 
+        ps.service?.category === selectedService
       );
-      const professionalServiceId = matchSvc ? matchSvc.id : (selectedPro.professionalServices?.[0]?.id || 1);
+      if (!matchSvc) {
+        notify('error', t('search.errorAlert'), 'No se encontró el servicio seleccionado. Por favor intenta de nuevo.');
+        setBookingLoading(false);
+        return;
+      }
 
       const booking = await bookingService.createBooking({
         professionalId: selectedPro.id,
-        professionalServiceId: professionalServiceId,
+        professionalServiceId: matchSvc.id,
         date: selectedDate,
-        startTime: selectedTime,
+        startTime: timeToBook,
         locationType: locationType === 'home' ? 'home' : 'professional',
         location: locationType === 'home' ? 'A domicilio' : (selectedPro.location?.address || 'Local del Profesional'),
         latitude: geo.latitude || selectedPro.location?.lat,
@@ -266,9 +302,9 @@ export default function SearchPage() {
       setPhase('confirmed');
       notify('success', t('search.successAlert'), t('search.bookingSuccessDesc'));
       
-    } catch (e) {
+    } catch (e: any) {
       setBookingLoading(false);
-      notify('error', t('search.errorAlert'), t('search.errorMsg'));
+      notify('error', t('search.errorAlert'), e?.response?.data?.message || t('search.errorMsg'));
     }
   };
 
@@ -653,13 +689,38 @@ export default function SearchPage() {
                      <span className="checkout-val">{locationType === 'home' ? t('search.homeService') : (selectedPro.location?.address || 'Local del Profesional')}</span>
                    </div>
 
-                   <div className="checkout-item highlight-time">
-                     <span className="checkout-label"><Calendar size={14}/> Fecha y Hora:</span>
-                     <span className="checkout-val text-right block">
+                   <div className="checkout-item checkout-item-full">
+                     <span className="checkout-label"><Calendar size={14}/> Fecha:</span>
+                     <span className="checkout-val">
                        {selectedDate && new Date(selectedDate).toLocaleDateString('es-ES', { weekday: 'short', day: 'numeric', month: 'short' })}
-                       <br/>
-                       <strong>{selectedTime || 'A coordinar'}</strong>
                      </span>
+                   </div>
+
+                   {/* ── Time Slot Picker ── */}
+                   <div className="checkout-slots-section">
+                     <span className="checkout-label"><Clock size={14}/> Horario:</span>
+                     {slotsLoading ? (
+                       <div className="checkout-slots-loading">
+                         <Loader2 size={18} className="spin-icon" />
+                         <span>Buscando horarios...</span>
+                       </div>
+                     ) : availableSlots.length > 0 ? (
+                       <div className="checkout-slots-grid">
+                         {availableSlots.map(slot => (
+                           <button
+                             key={slot}
+                             className={`checkout-slot-chip ${selectedBookingTime === slot ? 'checkout-slot-active' : ''}`}
+                             onClick={() => setSelectedBookingTime(slot)}
+                           >
+                             {slot}
+                           </button>
+                         ))}
+                       </div>
+                     ) : (
+                       <div className="checkout-slots-empty">
+                         <span>{selectedBookingTime || selectedTime || 'No hay horarios disponibles — usa la fecha seleccionada'}</span>
+                       </div>
+                     )}
                    </div>
 
                    <div className="checkout-total">
@@ -674,10 +735,10 @@ export default function SearchPage() {
 
                 <motion.button 
                   className="uber-search-btn confirm-checkout-btn" 
-                  disabled={!selectedTime || bookingLoading}
+                  disabled={(!selectedBookingTime && !selectedTime) || bookingLoading}
                   onClick={handleConfirmBooking}
-                  whileHover={selectedTime ? { scale: 1.02 } : {}}
-                  whileTap={selectedTime ? { scale: 0.98 } : {}}
+                  whileHover={selectedBookingTime || selectedTime ? { scale: 1.02 } : {}}
+                  whileTap={selectedBookingTime || selectedTime ? { scale: 0.98 } : {}}
                 >
                   {bookingLoading ? <Loader2 className="spin-icon" size={24} /> : 'Confirmar Reserva'}
                 </motion.button>
