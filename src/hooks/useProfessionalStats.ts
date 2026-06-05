@@ -14,6 +14,7 @@ export interface DashboardStats {
   weeklyBookingsByDay: number[];
   topServices: { name: string; count: number; revenue: number }[];
   recentReviews: any[];
+  weeklyDetails?: any[];
   incentive: any;
 }
 

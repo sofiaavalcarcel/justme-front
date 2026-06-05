@@ -1,6 +1,7 @@
+import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Users, Star, Award, ChevronRight, Activity, CalendarDays, Loader } from 'lucide-react';
-import { Card, Badge, Button } from '../../components/ui';
+import { Card, Badge, Button, Modal } from '../../components/ui';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../context/AuthContext';
 import { useProfessionalStats } from '../../hooks/useProfessionalStats';
@@ -11,6 +12,7 @@ export default function ProAnalytics() {
   const { professionalId } = useAuth();
   
   const { stats, loading } = useProfessionalStats(professionalId);
+  const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
   
   const formatCOP = (val: number | string) => {
     const num = typeof val === 'string' ? parseFloat(val) : val;
@@ -67,8 +69,8 @@ export default function ProAnalytics() {
             
             <div className="pa-inc-progress">
               <div className="pa-prog-text">
-                <span>{t('proAnalytics.completed', { count: s.incentive.currentServices || 0 })}</span>
-                <span>{t('proAnalytics.toGo', { count: Math.max(0, s.incentive.targetServices - (s.incentive.currentServices || 0)) })}</span>
+                <span>{t('proAnalytics.completed', { count: s.incentive.currentServices || 0, target: s.incentive.targetServices || 3 })}</span>
+                <span>{t('proAnalytics.toGo', { count: Math.max(0, s.incentive.targetServices - (s.incentive.currentServices || 0)), target: s.incentive.targetServices || 3 })}</span>
               </div>
               <div className="pa-prog-track">
                 <motion.div 
@@ -88,7 +90,7 @@ export default function ProAnalytics() {
               <div>
                 <Badge variant="primary" size="sm">{t('proAnalytics.milestone')}</Badge>
                 <h2>{t('proAnalytics.superPro')}</h2>
-                <p dangerouslySetInnerHTML={{ __html: t('proAnalytics.unlockMsg') }} />
+                <p dangerouslySetInnerHTML={{ __html: t('proAnalytics.unlockMsg', { target: 200 }) }} />
               </div>
               <Award size={48} className="pa-inc-icon" />
             </div>
@@ -121,21 +123,23 @@ export default function ProAnalytics() {
             <div>
               <h3>{t('proAnalytics.thisWeek')}</h3>
               <p style={{ fontSize: 'var(--text-xs)', color: 'var(--neutral-500)', marginTop: '2px' }}>
-                Ingresos este mes: {formatCOP(s.monthlyEarnings || s.totalRevenue || 0)} <span style={{ color: (s.monthlyTrend || 0) >= 0 ? 'var(--success-500)' : 'var(--error-500)' }}>({(s.monthlyTrend || 0) > 0 ? '+' : ''}{s.monthlyTrend || 0}%)</span>
+                Total de citas esta semana: <strong>{s.weeklyDetails?.length || 0}</strong>
               </p>
             </div>
-            <Button size="sm" variant="ghost">{t('proAnalytics.viewDetails')} <ChevronRight size={14} /></Button>
+            <Button size="sm" variant="ghost" onClick={() => setIsDetailsModalOpen(true)}>{t('proAnalytics.viewDetails')} <ChevronRight size={14} /></Button>
           </div>
           <div className="pa-chart-area">
             <div className="pa-bars">
               {relativeHeights.map((h: number, i: number) => (
                 <div key={i} className="pa-bar-col">
                   <motion.div 
-                    className="pa-bar-fill" 
+                    className="pa-bar-fill"
                     initial={{ height: 0 }} 
                     animate={{ height: `${h}%` }} 
                     transition={{ duration: 0.5, delay: 0.2 + (i * 0.05) }} 
-                  />
+                  >
+                    <div className="pa-bar-tooltip">{barHeights[i]} citas</div>
+                  </motion.div>
                   <span className="pa-bar-lbl">{daysLabels[i]}</span>
                 </div>
               ))}
@@ -166,6 +170,29 @@ export default function ProAnalytics() {
           </div>
         </Card>
       </div>
+
+      <Modal isOpen={isDetailsModalOpen} onClose={() => setIsDetailsModalOpen(false)} title="Detalles de la semana">
+        <div style={{ padding: '0 0.5rem', maxHeight: '400px', overflowY: 'auto' }}>
+          {s.weeklyDetails && s.weeklyDetails.length > 0 ? (
+            s.weeklyDetails.map((detail: any) => (
+              <div key={detail.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem', borderBottom: '1px solid var(--neutral-200)' }}>
+                <div>
+                  <div style={{ fontWeight: '600', color: 'var(--neutral-800)' }}>{detail.userName}</div>
+                  <div style={{ fontSize: '0.85rem', color: 'var(--neutral-500)' }}>{detail.serviceName} • {detail.date} a las {detail.time}</div>
+                </div>
+                <div style={{ textAlign: 'right' }}>
+                  <div style={{ fontWeight: '600', color: 'var(--primary-600)' }}>{formatCOP(detail.price)}</div>
+                  <Badge variant={detail.status === 'completed' ? 'success' : detail.status === 'cancelled' ? 'error' : 'default'} size="sm">
+                    {detail.status === 'completed' ? 'Completado' : detail.status === 'cancelled' ? 'Cancelado' : detail.status === 'confirmed' ? 'Confirmado' : detail.status}
+                  </Badge>
+                </div>
+              </div>
+            ))
+          ) : (
+            <p style={{ textAlign: 'center', padding: '2rem', color: 'var(--neutral-500)' }}>No hay detalles para mostrar esta semana.</p>
+          )}
+        </div>
+      </Modal>
     </div>
   );
 }
