@@ -592,8 +592,8 @@
     "subtitle": "Sigue el crecimiento de tu negocio y desbloquea recompensas",
     "milestone": "Hito Mensual",
     "superPro": "Estado Super Pro",
-    "unlockMsg": "Completa 200 servicios este mes para desbloquear un <strong>Bono de Billetera de $50</strong> y <strong>0% de Comisión</strong> por una semana.",
-    "completed": "{{count}} / 200 Servicios Completados",
+    "unlockMsg": "Completa {{target}} servicios este mes para desbloquear un <strong>Bono de Billetera de $50</strong> y <strong>0% de Comisión</strong> por una semana.",
+    "completed": "{{count}} / {{target}} Servicios Completados",
     "toGo": "¡Faltan {{count}}!",
     "metrics": {
       "bookings": "Citas Totales",
