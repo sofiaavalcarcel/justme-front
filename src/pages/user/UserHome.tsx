@@ -53,20 +53,15 @@ export default function UserHome() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Fetch TOP 10 professionals sorted by rating DESC, reviewCount DESC
   useEffect(() => {
     const fetchPros = async () => {
       setLoading(true);
       setError(null);
       try {
-        const lat = geo.latitude || 4.711;
-        const lng = geo.longitude || -74.0721;
-        const data = await professionalsService.getNearbyProfessionals({
-          latitude: lat,
-          longitude: lng,
-          radius: 10,
-        });
+        const data = await professionalsService.getTopProfessionals(10);
         const list = Array.isArray(data) ? data : (data?.data || []);
-        setTopPros(list.slice(0, 4));
+        setTopPros(list);
       } catch (err: any) {
         console.warn('Failed to fetch top professionals', err);
         setError(t('userHome.errorMsg'));
@@ -76,10 +71,8 @@ export default function UserHome() {
       }
     };
 
-    if (!geo.loading) {
-      fetchPros();
-    }
-  }, [geo.loading, geo.latitude, geo.longitude]);
+    fetchPros();
+  }, []);
 
   useEffect(() => {
     apiClient.get('/services/categories')
@@ -176,7 +169,7 @@ export default function UserHome() {
       <section className="home-section">
         <div className="home-section-header">
           <h2>{t('userHome.topProsTitle')}</h2>
-          <button className="see-all" onClick={() => navigate('/user/search')}>{t('userHome.seeAll')} <ChevronRight size={16} /></button>
+          <button className="see-all" onClick={() => navigate('/user/professionals')}>{t('userHome.seeAll')} <ChevronRight size={16} /></button>
         </div>
 
         {loading ? (
