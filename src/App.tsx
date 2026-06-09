@@ -21,6 +21,7 @@ import Booking from './pages/user/Booking';
 import Appointments from './pages/user/Appointments';
 import UserProfile from './pages/user/UserProfile';
 import UserRewards from './pages/user/UserRewards';
+import AllProfessionals from './pages/user/AllProfessionals';
 
 // Professional pages
 import ProDashboard from './pages/professional/ProDashboard';
@@ -67,6 +68,7 @@ function App() {
               <Route path="/user" element={<AppLayout />}>
                 <Route index element={<UserHome />} />
                 <Route path="search" element={<SearchPage />} />
+                <Route path="professionals" element={<AllProfessionals />} />
                 <Route path="professional/:id" element={<ProfessionalProfile />} />
                 <Route path="booking/:id" element={<Booking />} />
                 <Route path="appointments" element={<Appointments />} />

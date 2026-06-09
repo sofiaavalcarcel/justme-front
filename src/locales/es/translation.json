@@ -182,6 +182,13 @@
     "distanceUnit": "km",
     "fromPrice": "desde"
   },
+  "allProfessionals": {
+    "title": "Todos los Profesionales",
+    "subtitle": "Los mejores profesionales ordenados por calificación",
+    "emptyTitle": "No hay profesionales disponibles",
+    "emptyDesc": "Aún no hay profesionales registrados en la plataforma. ¡Vuelve pronto!",
+    "backBtn": "Volver al inicio"
+  },
   "search": {
     "title": "Elige tu servicio",
     "visitPro": "Visitar Profesional",

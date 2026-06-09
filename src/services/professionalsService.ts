@@ -34,6 +34,14 @@ export const professionalsService = {
     return response.data;
   },
 
+  // Top-rated professionals sorted by rating DESC, reviewCount DESC
+  getTopProfessionals: async (limit = 10, offset = 0) => {
+    const response = await apiClient.get('/professionals/top', {
+      params: { limit, offset },
+    });
+    return response.data;
+  },
+
   getProfessionalById: async (id: string) => {
     const response = await apiClient.get(`/professionals/${id}`);
     return response.data;
