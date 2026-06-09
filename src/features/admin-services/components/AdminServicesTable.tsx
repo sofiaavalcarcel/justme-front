@@ -1,7 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  Plus, Edit2, Trash2, Loader, Scissors, Tag, Layers
+  Plus, Edit2, Trash2, Loader, Scissors, Tag, Layers, CheckCircle, XCircle, Clock
 } from 'lucide-react';
 import { Card, Badge, Button } from '../../../components/ui';
 import { useServiceCategories } from '../hooks/useServiceCategories';
@@ -9,6 +9,7 @@ import type { ServiceCategory } from '../types';
 import { ServiceCategoryModal } from './ServiceCategoryModal';
 import { useTranslation } from 'react-i18next';
 import Swal from 'sweetalert2';
+import { apiClient } from '../../../services/api';
 
 export function AdminServicesTable() {
   const { t } = useTranslation();
@@ -16,6 +17,32 @@ export function AdminServicesTable() {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const { data: categories, isLoading, isMutating, createCategory, updateCategory, deleteCategory } = useServiceCategories();
+
+  // ─── Category Requests state ─────────────────────────────────────────────────
+  const [catRequests, setCatRequests] = useState<any[]>([]);
+  const [catLoading, setCatLoading] = useState(false);
+  const [catReviewing, setCatReviewing] = useState<number | null>(null);
+
+  const fetchCatRequests = async () => {
+    setCatLoading(true);
+    try {
+      const res = await apiClient.get('/admin/category-requests', { params: { status: 'pending' } });
+      const list = Array.isArray(res.data) ? res.data : res.data?.data || [];
+      setCatRequests(list);
+    } catch { /* silencioso */ }
+    finally { setCatLoading(false); }
+  };
+
+  useEffect(() => { fetchCatRequests(); }, []);
+
+  const reviewCatRequest = async (id: number, status: 'approved' | 'rejected') => {
+    setCatReviewing(id);
+    try {
+      await apiClient.patch(`/admin/category-requests/${id}/review`, { action: status });
+      fetchCatRequests();
+    } catch { /* silencioso */ }
+    finally { setCatReviewing(null); }
+  };
 
   const handleAdd = () => {
     setSelectedCategory(null);
@@ -179,6 +206,103 @@ export function AdminServicesTable() {
             </table>
           </div>
         )}
+      </Card>
+
+      {/* ─── Solicitudes de Categorías ──────────────────────────────────────── */}
+      <Card style={{ marginTop: 24, boxShadow: 'var(--shadow-md)', border: '1px solid var(--neutral-200)' }} padding="none">
+        <div style={{ padding: '20px 20px 10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <h2 style={{ display: 'flex', alignItems: 'center', gap: 8, margin: 0, fontSize: '1.2rem', fontWeight: 800 }}>
+            <Tag size={18} />
+            Solicitudes de nuevas categorías
+            {catRequests.length > 0 && (
+              <span style={{
+                display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                background: 'var(--primary-500)', color: '#fff',
+                borderRadius: 999, fontSize: '0.72rem', fontWeight: 800,
+                width: 22, height: 22, marginLeft: 4,
+              }}>{catRequests.length}</span>
+            )}
+          </h2>
+          <Button size="sm" variant="ghost" onClick={fetchCatRequests} disabled={catLoading}>
+            {catLoading ? <Loader size={14} style={{ animation: 'spin 0.8s linear infinite' }} /> : 'Actualizar'}
+          </Button>
+        </div>
+
+        <div style={{ padding: '12px 20px 20px' }}>
+          {catLoading ? (
+            <div style={{ padding: 'var(--space-8)', textAlign: 'center' }}>
+              <Loader size={28} style={{ animation: 'spin 0.8s linear infinite', color: 'var(--primary-500)', margin: '0 auto' }} />
+            </div>
+          ) : catRequests.length === 0 ? (
+            <div style={{ padding: 'var(--space-8)', textAlign: 'center', color: 'var(--neutral-400)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
+              <CheckCircle size={32} opacity={0.3} />
+              <span style={{ fontWeight: 500 }}>Sin solicitudes pendientes</span>
+            </div>
+          ) : catRequests.map((req: any) => (
+            <motion.div
+              key={req.id}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              style={{ display: 'flex', alignItems: 'flex-start', gap: 12, padding: 16, border: '1px solid var(--neutral-200)', borderRadius: 12, marginBottom: 12, background: 'var(--neutral-50)' }}
+            >
+              {/* Icono */}
+              <div style={{ background: 'var(--primary-50)', color: 'var(--primary-600)', padding: 10, borderRadius: '50%', flexShrink: 0 }}>
+                <Tag size={16} />
+              </div>
+
+              {/* Info */}
+              <div style={{ flex: 1 }}>
+                <p style={{ fontWeight: 700, margin: '0 0 4px', color: 'var(--neutral-900)' }}>
+                  {req.category || req.name}
+                </p>
+                {req.description && (
+                  <p style={{ fontSize: '0.85rem', color: 'var(--neutral-600)', margin: '0 0 8px' }}>{req.description}</p>
+                )}
+                <p style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: '0.75rem', color: 'var(--neutral-500)', margin: 0 }}>
+                  <Clock size={11} />
+                  {new Date(req.createdAt).toLocaleString('es-CO')}
+                  {req.professional?.user && (
+                    <> &bull; <strong>{req.professional.user.name} {req.professional.user.lastName}</strong></>
+                  )}
+                </p>
+              </div>
+
+              {/* Acciones */}
+              <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
+                <button
+                  onClick={() => reviewCatRequest(req.id, 'approved')}
+                  disabled={catReviewing === req.id}
+                  title="Aprobar"
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: 4,
+                    padding: '8px 14px', borderRadius: 8, border: 'none', cursor: 'pointer',
+                    background: 'rgba(16, 185, 129, 0.12)', color: 'var(--success-600)',
+                    fontWeight: 700, fontSize: '0.85rem', transition: 'all 0.2s',
+                    opacity: catReviewing === req.id ? 0.5 : 1,
+                  }}
+                >
+                  {catReviewing === req.id
+                    ? <Loader size={14} style={{ animation: 'spin 0.8s linear infinite' }} />
+                    : <><CheckCircle size={16} /> Aprobar</>}
+                </button>
+                <button
+                  onClick={() => reviewCatRequest(req.id, 'rejected')}
+                  disabled={catReviewing === req.id}
+                  title="Rechazar"
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: 4,
+                    padding: '8px 14px', borderRadius: 8, border: 'none', cursor: 'pointer',
+                    background: 'rgba(239, 68, 68, 0.1)', color: 'var(--error-600)',
+                    fontWeight: 700, fontSize: '0.85rem', transition: 'all 0.2s',
+                    opacity: catReviewing === req.id ? 0.5 : 1,
+                  }}
+                >
+                  <XCircle size={16} /> Rechazar
+                </button>
+              </div>
+            </motion.div>
+          ))}
+        </div>
       </Card>
 
       <ServiceCategoryModal

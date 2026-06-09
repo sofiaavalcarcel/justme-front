@@ -178,5 +178,43 @@ export const professionalsService = {
   deleteException: async (id: string | number) => {
     const response = await apiClient.delete(`/schedule/exceptions/${id}`);
     return response.data;
-  }
+  },
+
+  // ── Category Requests (profesional → admin) ──────────────────────────────
+  createCategoryRequest: async (data: { name: string; category: string; description?: string; icon?: string }) => {
+    const response = await apiClient.post('/services/category-requests', data);
+    return response.data;
+  },
+
+  getMyCategoryRequests: async () => {
+    try {
+      const response = await apiClient.get('/services/category-requests/mine');
+      return response.data;
+    } catch {
+      return [];
+    }
+  },
+};
+
+// ── Admin API para solicitudes de categorías ─────────────────────────────────
+export const adminCategoryRequestsService = {
+  getAll: async (status?: string) => {
+    const params = status ? { status } : {};
+    const response = await apiClient.get('/admin/category-requests', { params });
+    return response.data;
+  },
+
+  getPendingCount: async (): Promise<number> => {
+    try {
+      const response = await apiClient.get('/admin/category-requests/pending-count');
+      return typeof response.data === 'number' ? response.data : 0;
+    } catch {
+      return 0;
+    }
+  },
+
+  review: async (id: number, action: 'approved' | 'rejected', notes?: string) => {
+    const response = await apiClient.patch(`/admin/category-requests/${id}/review`, { action, notes });
+    return response.data;
+  },
 };

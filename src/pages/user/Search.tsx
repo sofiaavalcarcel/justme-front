@@ -568,7 +568,7 @@ export default function SearchPage() {
                             </button>
                           </div>
                         </div>
-                        <div className="uber-pro-price">${pro.price}</div>
+                        <div className="uber-pro-price">{new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 }).format(Number(pro.price) || 0)}</div>
                       </motion.div>
                     ))}
                   </div>
@@ -616,7 +616,7 @@ export default function SearchPage() {
                           </button>
                         </div>
                       </div>
-                      <div className="uber-pro-price">${pro.price}</div>
+                      <div className="uber-pro-price">{new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 }).format(Number(pro.price) || 0)}</div>
                     </motion.div>
                   ))}
 

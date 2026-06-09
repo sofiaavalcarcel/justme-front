@@ -15,6 +15,8 @@ import { useTranslation } from 'react-i18next';
 import { MapView } from '../components/map/MapView';
 import { Navigation } from 'lucide-react';
 import Swal from 'sweetalert2';
+import { ProServiceModal } from './professional/ProServiceModal';
+import { CategoryRequestModal } from './professional/CategoryRequestModal';
 
 const pageStyle: React.CSSProperties = { padding: 'var(--space-4)', maxWidth: '960px', margin: '0 auto' };
 const headerStyle: React.CSSProperties = { fontSize: 'var(--text-2xl)', fontFamily: 'var(--font-display)', fontWeight: 700, marginBottom: 'var(--space-5)' };
@@ -200,12 +202,9 @@ export function ProEarnings() {
 export function ProServices() {
   const { professionalId, verificationStatus } = useAuth();
   const [services, setServices] = React.useState<any[]>([]);
-  const [categories, setCategories] = React.useState<any[]>([]);
   const [loading, setLoading] = React.useState(true);
   const [showModal, setShowModal] = React.useState(false);
-  const [editingService, setEditingService] = React.useState<any>(null);
-  const [formData, setFormData] = React.useState({ name: '', description: '', price: '', duration: '', serviceId: '' });
-  const [saving, setSaving] = React.useState(false);
+  const [showCategoryModal, setShowCategoryModal] = React.useState(false);
   const { t } = useTranslation();
 
   const fetchServices = async () => {
@@ -219,58 +218,6 @@ export function ProServices() {
   };
 
   React.useEffect(() => { fetchServices(); }, [professionalId]);
-
-  React.useEffect(() => {
-    professionalsService.getServiceCategories()
-      .then((cats: any[]) => setCategories(Array.isArray(cats) ? cats : []))
-      .catch(() => setCategories([]));
-  }, []);
-
-  const handleOpenCreate = () => {
-    setEditingService(null);
-    setFormData({ name: '', description: '', price: '', duration: '', serviceId: categories[0]?.id ? String(categories[0].id) : '' });
-    setShowModal(true);
-  };
-
-  const handleOpenEdit = (svc: any) => {
-    setEditingService(svc);
-    setFormData({
-      name: svc.name || '',
-      description: svc.description || '',
-      price: String(svc.price || ''),
-      duration: String(svc.duration || ''),
-      serviceId: String(svc.serviceId || svc.service?.id || categories[0]?.id || '')
-    });
-    setShowModal(true);
-  };
-
-  const handleSave = async () => {
-    if (!professionalId || !formData.name || !formData.price || !formData.duration) {
-      Swal.fire({ icon: 'error', title: t('sharedPages.pro.error', 'Error'), text: 'Completa todos los campos requeridos', confirmButtonColor: 'var(--primary-600)' });
-      return;
-    }
-    setSaving(true);
-    try {
-      const payload: any = {
-        name: formData.name,
-        description: formData.description,
-        price: parseFloat(formData.price),
-        duration: parseInt(formData.duration),
-      };
-      if (formData.serviceId) payload.serviceId = parseInt(formData.serviceId);
-      if (editingService) {
-        await professionalsService.updateService(professionalId, String(editingService.id), payload);
-        Swal.fire({ icon: 'success', title: t('sharedPages.pro.updateSvc', 'Actualizado'), text: 'Servicio actualizado con éxito', confirmButtonColor: 'var(--primary-600)' });
-      } else {
-        await professionalsService.addService(professionalId, payload);
-        Swal.fire({ icon: 'success', title: t('sharedPages.pro.createSvc', 'Creado'), text: 'Servicio creado con éxito', confirmButtonColor: 'var(--primary-600)' });
-      }
-      setShowModal(false);
-      fetchServices();
-    } catch (err: any) {
-      Swal.fire({ icon: 'error', title: t('sharedPages.pro.error', 'Error'), text: err?.response?.data?.message || 'Error al guardar', confirmButtonColor: 'var(--primary-600)' });
-    } finally { setSaving(false); }
-  };
 
   const handleDelete = async (svcId: string) => {
     if (!professionalId) return;
@@ -305,7 +252,7 @@ export function ProServices() {
     <div style={pageStyle}>
       <div style={{ ...rowStyle, justifyContent: 'space-between', marginBottom: 'var(--space-5)' }}>
         <h1 style={{ ...headerStyle, marginBottom: 0 }}>{t('sharedPages.pro.servicesTitle')}</h1>
-        <Button size="sm" icon={<Plus size={16} />} onClick={handleOpenCreate} disabled={isBlocked}>{t('sharedPages.pro.addService')}</Button>
+        <Button size="sm" icon={<Plus size={16} />} onClick={() => setShowModal(true)} disabled={isBlocked}>{t('sharedPages.pro.addService')}</Button>
       </div>
 
       {isBlocked && (
@@ -321,90 +268,58 @@ export function ProServices() {
         </div>
       ) : (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: 'var(--space-3)' }}>
-          {services.map((s: any, i: number) => (
-            <motion.div key={s.id || i} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.04 }} style={{ height: '100%' }}>
-              <Card variant="default" padding="sm" hover style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)', height: '100%', border: '1px solid var(--neutral-100)', transition: 'transform 0.15s, box-shadow 0.15s' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                  <div style={{ width: 36, height: 36, borderRadius: 'var(--radius-lg)', background: 'linear-gradient(135deg, var(--primary-100), var(--primary-50))', color: 'var(--primary-600)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <Scissors size={16} strokeWidth={2} />
+          {services.map((s: any, i: number) => {
+            const displayName = s.service?.name || s.name || 'Servicio';
+            return (
+              <motion.div key={s.id || i} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.04 }} style={{ height: '100%' }}>
+                <Card variant="default" padding="sm" hover style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)', height: '100%', border: '1px solid var(--neutral-100)', transition: 'transform 0.15s, box-shadow 0.15s' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                    <div style={{ width: 36, height: 36, borderRadius: 'var(--radius-lg)', background: 'linear-gradient(135deg, var(--primary-100), var(--primary-50))', color: 'var(--primary-600)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <Scissors size={16} strokeWidth={2} />
+                    </div>
+                    <div style={{ display: 'flex', gap: '4px' }}>
+                      <Button size="sm" variant="ghost" icon={<Edit size={13} />} onClick={() => setShowModal(true)} disabled={isBlocked} style={{ padding: '5px', color: 'var(--neutral-500)', background: 'var(--neutral-50)' }} />
+                      <Button size="sm" variant="ghost" icon={<Trash2 size={13} />} onClick={() => handleDelete(String(s.id))} disabled={isBlocked} style={{ padding: '5px', color: 'var(--error-500)', background: 'var(--error-50)' }} />
+                    </div>
                   </div>
-                  <div style={{ display: 'flex', gap: '4px' }}>
-                    <Button size="sm" variant="ghost" icon={<Edit size={13} />} onClick={() => handleOpenEdit(s)} disabled={isBlocked} style={{ padding: '5px', color: 'var(--neutral-500)', background: 'var(--neutral-50)' }} />
-                    <Button size="sm" variant="ghost" icon={<Trash2 size={13} />} onClick={() => handleDelete(String(s.id))} disabled={isBlocked} style={{ padding: '5px', color: 'var(--error-500)', background: 'var(--error-50)' }} />
-                  </div>
-                </div>
 
-                <div style={{ flex: 1 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginBottom: 4 }}>
-                    {s.service?.name && (
-                      <span style={{ fontSize: '10px', fontWeight: 600, padding: '1px 8px', borderRadius: 100, background: 'var(--primary-50)', color: 'var(--primary-600)' }}>{s.service.name}</span>
+                  <div style={{ flex: 1 }}>
+                    <h3 style={{ fontWeight: 700, fontSize: 'var(--text-base)', color: 'var(--neutral-900)', marginBottom: '4px' }}>{displayName}</h3>
+                    {s.description && (
+                      <p style={{ fontSize: 'var(--text-xs)', color: 'var(--neutral-500)', lineHeight: 1.4, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                        {s.description}
+                      </p>
                     )}
                   </div>
-                  <h3 style={{ fontWeight: 700, fontSize: 'var(--text-base)', color: 'var(--neutral-900)', marginBottom: '4px' }}>{s.name}</h3>
-                  {s.description && (
-                    <p style={{ fontSize: 'var(--text-xs)', color: 'var(--neutral-500)', lineHeight: 1.4, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
-                      {s.description}
-                    </p>
-                  )}
-                </div>
 
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: 'var(--space-2)', borderTop: '1px solid var(--neutral-100)', marginTop: 'auto' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: 'var(--neutral-400)', fontSize: 'var(--text-xs)', fontWeight: 500 }}>
-                    <Clock size={12} /> <span>{s.duration || 30} min</span>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: 'var(--space-2)', borderTop: '1px solid var(--neutral-100)', marginTop: 'auto' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: 'var(--neutral-400)', fontSize: 'var(--text-xs)', fontWeight: 500 }}>
+                      <Clock size={12} /> <span>{s.duration || 30} min</span>
+                    </div>
+                    <div style={{ fontWeight: 700, fontSize: 'var(--text-base)', color: 'var(--primary-600)' }}>
+                      {new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 }).format(Number(s.price) || 0)}
+                    </div>
                   </div>
-                  <div style={{ fontWeight: 700, fontSize: 'var(--text-base)', color: 'var(--primary-600)' }}>
-                    ${s.price || 0}
-                  </div>
-                </div>
-              </Card>
-            </motion.div>
-          ))}
+                </Card>
+              </motion.div>
+            );
+          })}
         </div>
       )}
 
-      {/* Create/Edit Modal */}
-      <Modal isOpen={showModal} onClose={() => setShowModal(false)} title={editingService ? t('sharedPages.pro.editSvc', 'Editar Servicio') : t('sharedPages.pro.createSvc', 'Crear Servicio')}>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)', padding: '4px 2px', minWidth: '300px' }}>
-          {/* Category */}
-          <div>
-            <label style={{ fontSize: 'var(--text-xs)', fontWeight: 600, color: 'var(--neutral-600)', display: 'block', marginBottom: 4 }}>Categoría *</label>
-            <select
-              value={formData.serviceId}
-              onChange={e => setFormData({ ...formData, serviceId: e.target.value })}
-              style={{ width: '100%', padding: '9px 12px', border: '1.5px solid var(--neutral-200)', borderRadius: 'var(--radius-lg)', outline: 'none', fontSize: 'var(--text-sm)', background: 'var(--neutral-50)', cursor: 'pointer' }}
-            >
-              <option value="">-- Selecciona una categoría --</option>
-              {categories.map((cat: any) => (
-                <option key={cat.id} value={String(cat.id)}>{cat.name}</option>
-              ))}
-            </select>
-          </div>
-          {/* Name */}
-          <div>
-            <label style={{ fontSize: 'var(--text-xs)', fontWeight: 600, color: 'var(--neutral-600)', display: 'block', marginBottom: 4 }}>{t('sharedPages.pro.nameLabel', 'Nombre del Servicio')} *</label>
-            <input type="text" value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} placeholder="Ej. Corte Premium" style={{ width: '100%', padding: '9px 12px', border: '1.5px solid var(--neutral-200)', borderRadius: 'var(--radius-lg)', outline: 'none', fontSize: 'var(--text-sm)', background: 'var(--neutral-50)' }} onFocus={(e) => {e.target.style.borderColor = 'var(--primary-400)'; e.target.style.boxShadow = '0 0 0 3px var(--primary-50)'}} onBlur={(e) => {e.target.style.borderColor = 'var(--neutral-200)'; e.target.style.boxShadow = 'none'}} />
-          </div>
-          {/* Description */}
-          <div>
-            <label style={{ fontSize: 'var(--text-xs)', fontWeight: 600, color: 'var(--neutral-600)', display: 'block', marginBottom: 4 }}>{t('sharedPages.pro.descLabel', 'Descripción')}</label>
-            <textarea value={formData.description} onChange={e => setFormData({ ...formData, description: e.target.value })} rows={2} placeholder="Describe el servicio..." style={{ width: '100%', padding: '9px 12px', border: '1.5px solid var(--neutral-200)', borderRadius: 'var(--radius-lg)', outline: 'none', fontSize: 'var(--text-sm)', fontFamily: 'var(--font-body)', resize: 'vertical', background: 'var(--neutral-50)' }} onFocus={(e) => {e.target.style.borderColor = 'var(--primary-400)'; e.target.style.boxShadow = '0 0 0 3px var(--primary-50)'}} onBlur={(e) => {e.target.style.borderColor = 'var(--neutral-200)'; e.target.style.boxShadow = 'none'}} />
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-3)' }}>
-            <div>
-              <label style={{ fontSize: 'var(--text-xs)', fontWeight: 600, color: 'var(--neutral-600)', display: 'block', marginBottom: 4 }}>{t('sharedPages.pro.priceLabel', 'Precio ($)')}</label>
-              <input type="number" value={formData.price} onChange={e => setFormData({ ...formData, price: e.target.value })} placeholder="0" style={{ width: '100%', padding: '9px 12px', border: '1.5px solid var(--neutral-200)', borderRadius: 'var(--radius-lg)', outline: 'none', fontSize: 'var(--text-sm)', background: 'var(--neutral-50)' }} onFocus={(e) => {e.target.style.borderColor = 'var(--primary-400)'; e.target.style.boxShadow = '0 0 0 3px var(--primary-50)'}} onBlur={(e) => {e.target.style.borderColor = 'var(--neutral-200)'; e.target.style.boxShadow = 'none'}} />
-            </div>
-            <div>
-              <label style={{ fontSize: 'var(--text-xs)', fontWeight: 600, color: 'var(--neutral-600)', display: 'block', marginBottom: 4 }}>{t('sharedPages.pro.durLabel', 'Duración (min)')}</label>
-              <input type="number" value={formData.duration} onChange={e => setFormData({ ...formData, duration: e.target.value })} placeholder="30" style={{ width: '100%', padding: '9px 12px', border: '1.5px solid var(--neutral-200)', borderRadius: 'var(--radius-lg)', outline: 'none', fontSize: 'var(--text-sm)', background: 'var(--neutral-50)' }} onFocus={(e) => {e.target.style.borderColor = 'var(--primary-400)'; e.target.style.boxShadow = '0 0 0 3px var(--primary-50)'}} onBlur={(e) => {e.target.style.borderColor = 'var(--neutral-200)'; e.target.style.boxShadow = 'none'}} />
-            </div>
-          </div>
-          <div style={{ display: 'flex', gap: 'var(--space-2)', justifyContent: 'flex-end', paddingTop: 'var(--space-3)', borderTop: '1px solid var(--neutral-100)' }}>
-            <Button variant="ghost" onClick={() => setShowModal(false)} size="sm" style={{ color: 'var(--neutral-600)' }}>{t('sharedPages.pro.cancel', 'Cancelar')}</Button>
-            <Button onClick={handleSave} loading={saving} size="sm">{editingService ? t('sharedPages.pro.updateSvc', 'Guardar') : t('sharedPages.pro.createSvc', 'Crear')}</Button>
-          </div>
-        </div>
-      </Modal>
+      <ProServiceModal
+        open={showModal}
+        onClose={() => setShowModal(false)}
+        professionalId={Number(professionalId) || 0}
+        existingServices={services}
+        onSaved={fetchServices}
+        onRequestCategory={() => setShowCategoryModal(true)}
+      />
+
+      <CategoryRequestModal
+        open={showCategoryModal}
+        onClose={() => setShowCategoryModal(false)}
+      />
     </div>
   );
 }
