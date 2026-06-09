@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Calendar, Star, Clock, AlertCircle, Scissors, Wallet, ChevronRight } from 'lucide-react';
+import { Calendar, Star, Clock, AlertCircle, Scissors, Wallet, ChevronRight, Plus, Trash2, Pencil } from 'lucide-react';
 import { Card, Avatar, Button } from '../../components/ui';
 import { VerificationBanner } from '../../components/ui/VerificationBanner';
 import { useAuth } from '../../context/AuthContext';
@@ -8,6 +8,9 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAppointments } from '../../hooks/useAppointments';
 import { useProfessionalStats } from '../../hooks/useProfessionalStats';
+import { ProServiceModal } from './ProServiceModal';
+import { CategoryRequestModal } from './CategoryRequestModal';
+import { apiClient } from '../../services/api';
 import './ProDashboard.css';
 
 // ── Donut Chart (pure SVG, no library) ────────────────────────────────────────
@@ -30,34 +33,26 @@ function DonutChart({ slices, total }: { slices: DonutSlice[]; total: number }) 
 
   return (
     <svg viewBox="0 0 160 160" className="donut-svg">
-      {/* Background ring */}
       <circle cx={cx} cy={cy} r={r} fill="none" stroke="var(--neutral-100)" strokeWidth="22" />
       {total === 0 ? (
         <circle cx={cx} cy={cy} r={r} fill="none" stroke="var(--neutral-200)" strokeWidth="22" />
       ) : (
         segments.filter(seg => seg.value > 0).map((seg, i) => (
           <circle
-            key={i}
-            cx={cx}
-            cy={cy}
-            r={r}
-            fill="none"
-            stroke={seg.color}
-            strokeWidth="22"
+            key={i} cx={cx} cy={cy} r={r} fill="none"
+            stroke={seg.color} strokeWidth="22"
             strokeDasharray={`${seg.dash} ${circumference - seg.dash}`}
             strokeDashoffset={seg.offset}
             style={{ transform: 'rotate(-90deg)', transformOrigin: `${cx}px ${cy}px`, transition: 'stroke-dasharray 0.6s ease' }}
           />
         ))
       )}
-      {/* Center text */}
       <text x={cx} y={cy - 6} textAnchor="middle" className="donut-center-num">{total}</text>
       <text x={cx} y={cy + 14} textAnchor="middle" className="donut-center-lbl">citas</text>
     </svg>
   );
 }
 
-// ── Gender detection ───────────────────────────────────────────────────────────
 function getGreeting(name: string): string {
   const firstName = name.trim().split(' ')[0];
   const isFeminine = /a$/i.test(firstName);
@@ -73,22 +68,40 @@ export default function ProDashboard() {
   const { appointments, refetch } = useAppointments(professionalId);
   const { stats, loading: statsLoading, refetch: refetchStats } = useProfessionalStats(professionalId);
 
-  // Derived Data
-  const { upcoming } = useMemo(() => {
-    return {
-      upcoming: appointments.filter(a => a.status === 'pending'),
-    };
-  }, [appointments]);
+  // ─── Mis servicios ───────────────────────────────────────────────────────────
+  const [myServices, setMyServices] = useState<any[]>([]);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [categoryModalOpen, setCategoryModalOpen] = useState(false);
 
-  // Appointment status breakdown for donut chart
-  const statusBreakdown = useMemo(() => {
-    return {
-      pending: appointments.filter(a => a.status === 'pending').length,
-      confirmed: appointments.filter(a => a.status === 'confirmed').length,
-      completed: appointments.filter(a => a.status === 'completed').length,
-      cancelled: appointments.filter(a => a.status === 'cancelled').length,
-    };
-  }, [appointments]);
+  const fetchMyServices = async () => {
+    if (!professionalId) return;
+    try {
+      const res = await apiClient.get(`/services/professional/${professionalId}`);
+      const list = Array.isArray(res.data) ? res.data : res.data?.data || [];
+      setMyServices(list);
+    } catch { /* silencioso */ }
+  };
+
+  useEffect(() => { fetchMyServices(); }, [professionalId]);
+
+  const handleRemoveService = async (id: number) => {
+    try {
+      await apiClient.delete(`/services/professional-service/${id}`);
+      fetchMyServices();
+    } catch { /* silencioso */ }
+  };
+
+  // ─── Derived data ────────────────────────────────────────────────────────────
+  const { upcoming } = useMemo(() => ({
+    upcoming: appointments.filter(a => a.status === 'pending'),
+  }), [appointments]);
+
+  const statusBreakdown = useMemo(() => ({
+    pending:   appointments.filter(a => a.status === 'pending').length,
+    confirmed: appointments.filter(a => a.status === 'confirmed').length,
+    completed: appointments.filter(a => a.status === 'completed').length,
+    cancelled: appointments.filter(a => a.status === 'cancelled').length,
+  }), [appointments]);
 
   const donutSlices: DonutSlice[] = [
     { value: statusBreakdown.pending,   color: 'var(--warning-400)',  label: 'En espera' },
@@ -98,30 +111,22 @@ export default function ProDashboard() {
   ];
 
   useEffect(() => {
-    const interval = setInterval(() => { 
-      refetch();
-      refetchStats();
-    }, 30000);
+    const interval = setInterval(() => { refetch(); refetchStats(); }, 30000);
     return () => clearInterval(interval);
   }, [refetch, refetchStats]);
 
-  const walletBalance = stats?.walletBalance || 0;
-  const userName = user ? `${user.name || ''} ${user.lastName || ''}`.trim() : '';
-  const greeting = userName ? getGreeting(userName) : 'Bienvenido';
-  const profilePhoto = user?.avatar || user?.photoUrl || undefined;
-
-  // Recent Activity items
-  const nextAppt = upcoming[0] || null;
-  const lastReview = stats?.recentReviews?.[0] || null;
-  const topService = stats?.topServices?.[0] || null;
+  const walletBalance  = stats?.walletBalance || 0;
+  const userName       = user ? `${user.name || ''} ${user.lastName || ''}`.trim() : '';
+  const greeting       = userName ? getGreeting(userName) : 'Bienvenido';
+  const profilePhoto   = user?.avatar || user?.photoUrl || undefined;
+  const nextAppt       = upcoming[0] || null;
+  const lastReview     = stats?.recentReviews?.[0] || null;
+  const topService     = stats?.topServices?.[0] || null;
 
   const formatCOP = (val: number | string) => {
     const num = typeof val === 'string' ? parseFloat(val) : val;
-    return new Intl.NumberFormat('es-CO', {
-      style: 'currency',
-      currency: 'COP',
-      minimumFractionDigits: 0,
-    }).format(num || 0).replace('COP', '$');
+    return new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 })
+      .format(num || 0).replace('COP', '$');
   };
 
   return (
@@ -189,19 +194,57 @@ export default function ProDashboard() {
                       <span className="donut-dot" style={{ background: s.color }} />
                       <span className="donut-legend-label">{s.label}</span>
                       <div className="donut-legend-bar-wrap">
-                        <div
-                          className="donut-legend-bar"
-                          style={{
-                            background: s.color,
-                            width: appointments.length > 0 ? `${(s.value / appointments.length) * 100}%` : '0%',
-                          }}
-                        />
+                        <div className="donut-legend-bar" style={{ background: s.color, width: appointments.length > 0 ? `${(s.value / appointments.length) * 100}%` : '0%' }} />
                       </div>
                       <span className="donut-legend-count">{s.value}</span>
                     </div>
                   ))}
                 </div>
               </div>
+            </Card>
+          </motion.div>
+
+          {/* ── Mis Servicios ── */}
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
+            <Card variant="default" padding="lg" className="donut-card">
+              <div className="donut-header">
+                <h2>Mis Servicios</h2>
+                <button className="dash-add-svc-btn" onClick={() => setModalOpen(true)}>
+                  <Plus size={15} /> Agregar
+                </button>
+              </div>
+
+              {myServices.length === 0 ? (
+                <div className="dash-svc-empty">
+                  <Scissors size={28} />
+                  <p>Aún no tienes servicios configurados.</p>
+                  <button className="dash-svc-empty-btn" onClick={() => setModalOpen(true)}>
+                    <Plus size={14} /> Agregar mi primer servicio
+                  </button>
+                </div>
+              ) : (
+                <div className="dash-svc-list">
+                  {myServices.map(svc => (
+                    <div key={svc.id} className="dash-svc-item">
+                      <div className="dash-svc-icon"><Scissors size={16} /></div>
+                      <div className="dash-svc-info">
+                        <span className="dash-svc-name">{svc.service?.name}</span>
+                        <span className="dash-svc-meta">
+                          {new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 }).format(Number(svc.price) || 0)} &middot; {svc.duration} min
+                        </span>
+                      </div>
+                      <div className="dash-svc-actions">
+                        <button className="dash-svc-btn-edit" title="Editar" onClick={() => setModalOpen(true)}>
+                          <Pencil size={13} />
+                        </button>
+                        <button className="dash-svc-btn-del" title="Eliminar" onClick={() => handleRemoveService(svc.id)}>
+                          <Trash2 size={13} />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </Card>
           </motion.div>
         </div>
@@ -261,9 +304,7 @@ export default function ProDashboard() {
 
             {/* Top Service */}
             <div className="activity-section">
-              <div className="activity-section-title">
-                <span>Servicio destacado</span>
-              </div>
+              <div className="activity-section-title"><span>Servicio destacado</span></div>
               {topService ? (
                 <motion.div initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.2 }} className="activity-card">
                   <div className="activity-service-icon"><Scissors size={18} /></div>
@@ -296,13 +337,31 @@ export default function ProDashboard() {
               </div>
             </div>
 
-            {/* Switch role button */}
+            {/* Switch role */}
             <Button size="sm" variant="secondary" className="switch-role-btn" onClick={() => { switchRole('user'); navigate('/user'); }}>
               {t('proDash.switchBtn')}
             </Button>
           </div>
         </aside>
       </div>
+
+      {/* ── Modal de servicios ── */}
+      {professionalId && (
+        <ProServiceModal
+          open={modalOpen}
+          onClose={() => setModalOpen(false)}
+          professionalId={Number(professionalId)}
+          existingServices={myServices}
+          onSaved={fetchMyServices}
+          onRequestCategory={() => setCategoryModalOpen(true)}
+        />
+      )}
+
+      {/* ── Modal de solicitud de categoría ── */}
+      <CategoryRequestModal
+        open={categoryModalOpen}
+        onClose={() => setCategoryModalOpen(false)}
+      />
     </div>
   );
 }

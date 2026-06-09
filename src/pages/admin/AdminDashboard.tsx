@@ -1,13 +1,15 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Users, Briefcase, CreditCard, TrendingUp, DollarSign, Activity, 
   BarChart3, ShieldCheck, Loader, UserPlus, Calendar, Search, 
-  ChevronLeft, ChevronRight, SlidersHorizontal, ArrowUpRight, ArrowDownLeft
+  ChevronLeft, ChevronRight, SlidersHorizontal, ArrowUpRight, ArrowDownLeft,
+  Tag, CheckCircle, XCircle, Clock
 } from 'lucide-react';
 import { Card, Badge, Avatar, Button, Modal } from '../../components/ui';
 import { useAdminStats } from '../../hooks/useAdminStats';
 import { useTranslation } from 'react-i18next';
+import { apiClient } from '../../services/api';
 import './AdminDashboard.css';
 
 export default function AdminDashboard() {
@@ -22,6 +24,32 @@ export default function AdminDashboard() {
   const [modalPage, setModalPage] = useState(1);
   const [activityFilters, setActivityFilters] = useState({ type: '', startDate: '', endDate: '' });
   const [hoveredBar, setHoveredBar] = useState<number | null>(null);
+
+  // ─── Category Requests state ─────────────────────────────────────────────────
+  const [catRequests, setCatRequests] = useState<any[]>([]);
+  const [catLoading, setCatLoading] = useState(false);
+  const [catReviewing, setCatReviewing] = useState<number | null>(null);
+
+  const fetchCatRequests = async () => {
+    setCatLoading(true);
+    try {
+      const res = await apiClient.get('/admin/category-requests', { params: { status: 'pending' } });
+      const list = Array.isArray(res.data) ? res.data : res.data?.data || [];
+      setCatRequests(list);
+    } catch { /* silencioso */ }
+    finally { setCatLoading(false); }
+  };
+
+  useEffect(() => { fetchCatRequests(); }, []);
+
+  const reviewCatRequest = async (id: number, status: 'approved' | 'rejected') => {
+    setCatReviewing(id);
+    try {
+      await apiClient.patch(`/admin/category-requests/${id}/review`, { action: status });
+      fetchCatRequests();
+    } catch { /* silencioso */ }
+    finally { setCatReviewing(null); }
+  };
 
   const growthStr = (v: number | undefined) =>
     v === undefined || v === null ? null : v >= 0 ? `+${v}%` : `${v}%`;
@@ -78,6 +106,31 @@ export default function AdminDashboard() {
         </div>
         <Badge variant="primary" size="md"><ShieldCheck size={14} /> Admin</Badge>
       </div>
+
+      {/* Pending Category Requests Alert */}
+      {catRequests.length > 0 && (
+        <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} style={{ marginBottom: 20 }}>
+          <div style={{
+            display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px',
+            background: 'var(--warning-50, #fefce8)', border: '1px solid var(--warning-200, #fef08a)',
+            borderRadius: 12, color: 'var(--warning-800, #854d0e)'
+          }}>
+            <Tag size={20} style={{ color: 'var(--warning-500, #eab308)' }} />
+            <div style={{ flex: 1 }}>
+              <p style={{ margin: 0, fontWeight: 700, fontSize: '0.9rem' }}>Solicitudes de categorías pendientes</p>
+              <p style={{ margin: 0, fontSize: '0.8rem', opacity: 0.9 }}>
+                Tienes {catRequests.length} solicitud{catRequests.length === 1 ? '' : 'es'} de categorías esperando tu revisión.
+              </p>
+            </div>
+            <a href="/admin/services" style={{
+              textDecoration: 'none', padding: '6px 12px', background: 'var(--warning-500, #eab308)',
+              color: '#fff', borderRadius: 8, fontSize: '0.8rem', fontWeight: 600
+            }}>
+              Revisar
+            </a>
+          </div>
+        </motion.div>
+      )}
 
       {/* KPIs */}
       <div className="admin-kpis">
@@ -229,6 +282,8 @@ export default function AdminDashboard() {
           </div>
         </section>
       </div>
+
+
 
       {/* Activities Full Modal */}
       <Modal isOpen={showActivityModal} onClose={() => setShowActivityModal(false)} title={t('adminDash.activitiesModalTitle')}>

@@ -232,7 +232,7 @@ export default function Booking() {
                       <h3>{svcName}</h3>
                       <span className="svc-dur"><Clock size={13} /> {svc.duration || 30} {t('booking.min')}</span>
                     </div>
-                    <span className="svc-price">${svc.price || 0}</span>
+                    <span className="svc-price">{new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 }).format(Number(svc.price) || 0)}</span>
                   </Card>
                 );
               })}
@@ -329,7 +329,7 @@ export default function Booking() {
               </div>
               <div className="confirm-price-row">
                 <span>{t('booking.estPrice')}</span>
-                <span className="confirm-total">${selectedSvc?.price || pro.price || 0}</span>
+                <span className="confirm-total">{new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 }).format(Number(selectedSvc?.price || pro.price) || 0)}</span>
               </div>
             </Card>
           </motion.div>
