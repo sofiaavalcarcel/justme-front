@@ -4,7 +4,7 @@ import React, { useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { Card, Badge, Button, Avatar, Rating } from '../components/ui';
 import { Modal } from '../components/ui/Modal';
-import { Home, DollarSign, Plus, Scissors, Edit, Image as ImageIcon, Trash2, Star, MapPin, Clock, Loader, Eye, Calendar } from 'lucide-react';
+import { Home, DollarSign, Plus, Scissors, Edit, Image as ImageIcon, Trash2, Star, MapPin, Clock, Loader, Eye, Calendar, Camera } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useNotification } from '../context/NotificationContext';
 import { bookingService } from '../services/bookingService';
@@ -436,15 +436,37 @@ export function ProPortfolio() {
 }
 
 export function ProProfileEditor() {
-  const { user, professionalId } = useAuth();
+  const { user, professionalId, setUser } = useAuth();
   const { notify } = useNotification();
   const { t } = useTranslation();
   const [saving, setSaving] = React.useState(false);
+  const [uploadingImage, setUploadingImage] = React.useState(false);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
   const [formData, setFormData] = React.useState({
     name: user?.name || '', email: user?.email || '', phone: user?.phone || '',
     bio: '', address: '', serviceRadius: 5, experience: '', specialties: '',
     latitude: 0, longitude: 0
   });
+
+  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user?.id) return;
+    
+    setUploadingImage(true);
+    try {
+      const response = await userService.uploadAvatar(user.id, file);
+      
+      if (user && setUser) {
+        setUser({ ...user, avatar: response.data?.profileImage || response.data?.avatar || URL.createObjectURL(file) });
+      }
+      notify('success', t('userProfile.successProfile', 'Perfil Actualizado'), 'Foto de perfil actualizada correctamente');
+    } catch (err: any) {
+      notify('error', t('userProfile.errorTitle', 'Error'), err?.response?.data?.message || 'Error al subir la imagen');
+    } finally {
+      setUploadingImage(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
 
   React.useEffect(() => {
     if (professionalId) {
@@ -515,44 +537,102 @@ export function ProProfileEditor() {
     } finally { setSaving(false); }
   };
 
-  const inputStyle: React.CSSProperties = { width: '100%', padding: 'var(--space-3)', border: '1.5px solid var(--neutral-200)', borderRadius: 'var(--radius-xl)', outline: 'none', background: 'var(--neutral-0)', color: 'var(--neutral-900)' };
-  const labelStyle: React.CSSProperties = { fontSize: 'var(--text-xs)', fontWeight: 600, color: 'var(--neutral-500)', marginBottom: 4, display: 'block' };
+  const inputStyle: React.CSSProperties = { width: '100%', padding: '14px 16px', border: '1px solid var(--neutral-200)', borderRadius: 'var(--radius-xl)', outline: 'none', background: 'var(--neutral-50)', color: 'var(--neutral-900)', fontSize: 'var(--text-sm)', transition: 'all 0.2s ease', fontFamily: 'var(--font-body)' };
+  const labelStyle: React.CSSProperties = { fontSize: '0.75rem', fontWeight: 600, color: 'var(--neutral-500)', marginBottom: '6px', display: 'block', textTransform: 'uppercase', letterSpacing: '0.04em' };
 
   return (
     <div style={pageStyle}>
       <h1 style={headerStyle}>{t('sharedPages.pro.profParams')}</h1>
-      <Card variant="default" padding="lg">
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
-          <div><label style={labelStyle}>{t('sharedPages.pro.fullName')}</label><input type="text" value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} style={inputStyle} /></div>
-          <div><label style={labelStyle}>{t('sharedPages.pro.bio')}</label><textarea value={formData.bio} onChange={e => setFormData({ ...formData, bio: e.target.value })} rows={3} style={{ ...inputStyle, fontFamily: 'var(--font-body)', resize: 'vertical' }} /></div>
-          <div><label style={labelStyle}>{t('sharedPages.pro.experience')}</label><input type="text" value={formData.experience} onChange={e => setFormData({ ...formData, experience: e.target.value })} placeholder="" style={inputStyle} /></div>
-          <div><label style={labelStyle}>{t('sharedPages.pro.specialties')}</label><input type="text" value={formData.specialties} onChange={e => setFormData({ ...formData, specialties: e.target.value })} placeholder="" style={inputStyle} /></div>
-          <div><label style={labelStyle}>{t('sharedPages.pro.phone')}</label><input type="tel" value={formData.phone} onChange={e => setFormData({ ...formData, phone: e.target.value })} style={inputStyle} /></div>
-          <div><label style={labelStyle}>{t('sharedPages.pro.email')}</label><input type="email" value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })} style={inputStyle} /></div>
-          <div><label style={labelStyle}>{t('sharedPages.pro.address')}</label><input type="text" value={formData.address} onChange={e => setFormData({ ...formData, address: e.target.value })} style={inputStyle} /></div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-3)' }}>
-            <div><label style={labelStyle}>{t('sharedPages.pro.lat')}</label><input type="number" step="0.0000001" value={formData.latitude} onChange={e => setFormData({ ...formData, latitude: parseFloat(e.target.value) || 0 })} style={inputStyle} /></div>
-            <div><label style={labelStyle}>{t('sharedPages.pro.lng')}</label><input type="number" step="0.0000001" value={formData.longitude} onChange={e => setFormData({ ...formData, longitude: parseFloat(e.target.value) || 0 })} style={inputStyle} /></div>
-          </div>
-          <Button variant="secondary" icon={<Navigation size={14} />} onClick={handleDetectLocation}>{t('sharedPages.pro.detectLoc')}</Button>
-          
-          <div style={{ height: '350px', borderRadius: 'var(--radius-xl)', overflow: 'hidden', border: '1.5px solid var(--neutral-200)', position: 'relative', marginTop: 'var(--space-2)' }}>
-             <MapView 
-               professionals={[]}
-               userLocation={null}
-               isPicker={true}
-               center={{ lat: formData.latitude, lng: formData.longitude }}
-               onPickerChange={handleMapClick}
-               zoom={15}
-             />
-             <div style={{ position: 'absolute', top: '10px', right: '10px', zIndex: 1000, background: 'rgba(255,255,255,0.9)', padding: '6px 12px', borderRadius: ' var(--radius-lg)', fontSize: '11px', fontWeight: '800', border: '1px solid var(--neutral-200)', color: 'var(--primary-600)', backdropFilter: 'blur(4px)', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}>
-                {t('sharedPages.pro.mapHint')}
-             </div>
+      
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-5)' }}>
+        <Card variant="default" padding="lg" style={{ overflow: 'visible' }}>
+          {/* Top Avatar Banner */}
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: '-40px', marginBottom: 'var(--space-5)' }}>
+            <div style={{ position: 'relative', display: 'inline-block' }}>
+              <div style={{ padding: '4px', background: 'white', borderRadius: '50%', boxShadow: '0 8px 32px rgba(0,0,0,0.1)' }}>
+                <Avatar src={user?.avatar} name={user?.name || 'Profesional'} size="xl" />
+              </div>
+              <button 
+                onClick={() => fileInputRef.current?.click()}
+                disabled={uploadingImage}
+                style={{ position: 'absolute', bottom: '0px', right: '0px', background: 'var(--primary-600)', color: 'white', border: '3px solid white', borderRadius: '50%', width: 44, height: 44, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: uploadingImage ? 'not-allowed' : 'pointer', boxShadow: '0 4px 12px rgba(227, 66, 52, 0.4)', transition: 'transform 0.2s', zIndex: 10 }}
+              >
+                {uploadingImage ? <Loader size={20} style={{ animation: 'spin 1s linear infinite' }} /> : <Camera size={20} />}
+              </button>
+              <input 
+                type="file" 
+                accept="image/*" 
+                ref={fileInputRef} 
+                onChange={handleImageChange} 
+                style={{ display: 'none' }}
+              />
+            </div>
+            <h2 style={{ marginTop: 'var(--space-3)', fontSize: 'var(--text-xl)', fontWeight: 800, color: 'var(--neutral-900)', marginBottom: '2px' }}>{formData.name || 'Profesional'}</h2>
+            <p style={{ fontSize: 'var(--text-sm)', color: 'var(--neutral-500)', fontWeight: 500 }}>
+              {t('sharedPages.pro.changePhoto', 'Toca la cámara para cambiar foto')}
+            </p>
           </div>
 
-          <Button onClick={handleSave} loading={saving} size="lg" style={{ marginTop: 'var(--space-2)' }}>{t('sharedPages.pro.saveChanges')}</Button>
-        </div>
-      </Card>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 'var(--space-4)' }}>
+              <div><label style={labelStyle}>{t('sharedPages.pro.fullName')}</label><input type="text" value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} style={inputStyle} /></div>
+              <div><label style={labelStyle}>{t('sharedPages.pro.phone')}</label><input type="tel" value={formData.phone} onChange={e => setFormData({ ...formData, phone: e.target.value })} style={inputStyle} /></div>
+              <div><label style={labelStyle}>{t('sharedPages.pro.email')}</label><input type="email" value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })} style={inputStyle} /></div>
+              <div><label style={labelStyle}>{t('sharedPages.pro.experience')}</label><input type="text" value={formData.experience} onChange={e => setFormData({ ...formData, experience: e.target.value })} placeholder="Ej: 5 años" style={inputStyle} /></div>
+            </div>
+
+            <div><label style={labelStyle}>{t('sharedPages.pro.specialties')}</label><input type="text" value={formData.specialties} onChange={e => setFormData({ ...formData, specialties: e.target.value })} placeholder="Ej: Barbería, Colorimetría" style={inputStyle} /></div>
+            
+            <div><label style={labelStyle}>{t('sharedPages.pro.bio')}</label><textarea value={formData.bio} onChange={e => setFormData({ ...formData, bio: e.target.value })} rows={4} style={{ ...inputStyle, resize: 'vertical' }} placeholder="Háblanos un poco de ti y tu experiencia profesional..." /></div>
+          </div>
+        </Card>
+
+        <Card variant="default" padding="lg">
+          <h3 style={{ fontSize: 'var(--text-lg)', fontWeight: 700, marginBottom: 'var(--space-4)' }}>Ubicación y Alcance</h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
+            <div><label style={labelStyle}>{t('sharedPages.pro.address')}</label><input type="text" value={formData.address} onChange={e => setFormData({ ...formData, address: e.target.value })} style={inputStyle} placeholder="Dirección física de tu estudio o base..." /></div>
+            
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-3)' }}>
+              <div><label style={labelStyle}>{t('sharedPages.pro.lat')}</label><input type="number" step="0.0000001" value={formData.latitude} onChange={e => setFormData({ ...formData, latitude: parseFloat(e.target.value) || 0 })} style={inputStyle} /></div>
+              <div><label style={labelStyle}>{t('sharedPages.pro.lng')}</label><input type="number" step="0.0000001" value={formData.longitude} onChange={e => setFormData({ ...formData, longitude: parseFloat(e.target.value) || 0 })} style={inputStyle} /></div>
+            </div>
+            
+            <Button variant="secondary" icon={<Navigation size={16} />} onClick={handleDetectLocation} style={{ width: 'fit-content' }}>
+              {t('sharedPages.pro.detectLoc', 'Detectar mi ubicación actual')}
+            </Button>
+            
+            <div style={{ height: '300px', borderRadius: 'var(--radius-2xl)', overflow: 'hidden', border: '1px solid var(--neutral-200)', position: 'relative', marginTop: 'var(--space-2)' }}>
+               <MapView 
+                 professionals={[]}
+                 userLocation={null}
+                 isPicker={true}
+                 center={{ lat: formData.latitude, lng: formData.longitude }}
+                 onPickerChange={handleMapClick}
+                 zoom={15}
+               />
+               <div style={{ position: 'absolute', top: '12px', right: '12px', zIndex: 1000, background: 'rgba(255,255,255,0.95)', padding: '8px 16px', borderRadius: 'var(--radius-xl)', fontSize: '12px', fontWeight: '700', border: '1px solid var(--neutral-200)', color: 'var(--primary-600)', backdropFilter: 'blur(8px)', boxShadow: '0 8px 24px rgba(0,0,0,0.1)' }}>
+                  {t('sharedPages.pro.mapHint', 'Mueve el pin para ajustar')}
+               </div>
+            </div>
+          </div>
+        </Card>
+
+        <Button 
+          onClick={handleSave} 
+          loading={saving} 
+          size="lg" 
+          style={{ 
+            width: '100%', 
+            padding: '16px', 
+            fontSize: 'var(--text-lg)', 
+            fontWeight: 700, 
+            borderRadius: 'var(--radius-xl)', 
+            boxShadow: '0 8px 24px rgba(227, 66, 52, 0.25)' 
+          }}
+        >
+          {t('sharedPages.pro.saveChanges')}
+        </Button>
+      </div>
     </div>
   );
 }
