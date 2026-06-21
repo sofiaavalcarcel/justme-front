@@ -12,7 +12,7 @@ import { AddressManager, type Address } from './AddressManager';
 
 // Esquema de validación estricta Zod
 const profileSchema = z.object({
-  firstName: z.string().min(2, 'El nombre debe tener al menos 2 caracteres'),
+  name: z.string().min(2, 'El nombre debe tener al menos 2 caracteres'),
   lastName: z.string().min(2, 'El apellido debe tener al menos 2 caracteres'),
   phone: z.string().regex(/^\+?[1-9]\d{1,14}$/, 'Número de teléfono inválido').optional().or(z.literal('')),
 });
@@ -37,23 +37,42 @@ export const ProfileSettings = () => {
   const { register, handleSubmit, formState: { errors, isDirty } } = useForm<ProfileFormValues>({
     resolver: zodResolver(profileSchema),
     defaultValues: {
-      firstName: user?.firstName || '',
+      name: user?.name || '',
       lastName: user?.lastName || '',
       phone: '', // Añadir propiedad phone en el User del AuthStore en caso de integrarlo
     },
   });
 
   const updateProfileMutation = useMutation({
-    mutationFn: async (formData: FormData) => {
-      const { data } = await apiClient.patch(`/users/${user?.id}/profile`, formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      });
+    mutationFn: async ({ values, file }: { values: ProfileFormValues, file: File | null }) => {
+      // 1. Actualizar datos de perfil (PUT /users/:id)
+      const payload = {
+        name: values.name,
+        lastName: values.lastName,
+        phone: values.phone || undefined,
+      };
+      const { data } = await apiClient.put(`/users/${user?.id}`, payload);
+
+      // 2. Si hay foto nueva, se sube (POST /users/:id/avatar)
+      if (file) {
+        const formData = new FormData();
+        formData.append('image', file); // El backend espera 'image'
+        await apiClient.post(`/users/${user?.id}/avatar`, formData, {
+          headers: { 'Content-Type': 'multipart/form-data' },
+        });
+      }
+      
       return data;
     },
-    onSuccess: (response) => {
-      if (user && token) {
-        // Actualizar Zustand store
-        login({ ...user, ...response.data }, token);
+    onSuccess: async () => {
+      // Re-obtener el perfil actualizado
+      try {
+        const { data: updatedProfile } = await apiClient.get(`/users/${user?.id}`);
+        if (user && token && updatedProfile) {
+           login({ ...user, ...updatedProfile }, token);
+        }
+      } catch (e) {
+         if (user && token) login({ ...user }, token);
       }
       setSelectedFile(null); // Reset archivo después de subido
     },
@@ -68,13 +87,7 @@ export const ProfileSettings = () => {
   };
 
   const onSubmit = (values: ProfileFormValues) => {
-    const formData = new FormData();
-    formData.append('firstName', values.firstName);
-    formData.append('lastName', values.lastName);
-    if (values.phone) formData.append('phone', values.phone);
-    if (selectedFile) formData.append('profileImage', selectedFile);
-    
-    updateProfileMutation.mutate(formData);
+    updateProfileMutation.mutate({ values, file: selectedFile });
   };
 
   return (
@@ -89,7 +102,7 @@ export const ProfileSettings = () => {
               <Avatar.Root className="w-8 h-8 rounded-full overflow-hidden bg-gray-100">
                 <Avatar.Image src={user?.profileImage} className="w-full h-full object-cover" />
                 <Avatar.Fallback className="flex items-center justify-center w-full h-full text-xs font-bold text-[#E34234]">
-                  {user?.firstName?.[0]}{user?.lastName?.[0]}
+                  {user?.name?.[0]}{user?.lastName?.[0]}
                 </Avatar.Fallback>
               </Avatar.Root>
               <ChevronDown size={16} className="text-gray-500" />
@@ -129,7 +142,7 @@ export const ProfileSettings = () => {
               <Avatar.Root className="w-24 h-24 rounded-full overflow-hidden bg-gray-100 border-2 border-[#E34234] shrink-0">
                 <Avatar.Image src={previewImage || undefined} className="w-full h-full object-cover" />
                 <Avatar.Fallback className="flex items-center justify-center w-full h-full text-2xl font-bold text-gray-400">
-                  {user?.firstName?.[0]}{user?.lastName?.[0]}
+                  {user?.name?.[0]}{user?.lastName?.[0]}
                 </Avatar.Fallback>
               </Avatar.Root>
               <div className="flex flex-col space-y-2">
@@ -145,10 +158,10 @@ export const ProfileSettings = () => {
               <div className="space-y-1">
                 <label className="text-sm font-medium text-gray-700">Nombre</label>
                 <input 
-                  {...register('firstName')} 
-                  className={`w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-2 ${errors.firstName ? 'border-red-500 focus:ring-red-200' : 'border-gray-300 focus:ring-[#E34234] focus:border-transparent'}`}
+                  {...register('name')} 
+                  className={`w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-2 ${errors.name ? 'border-red-500 focus:ring-red-200' : 'border-gray-300 focus:ring-[#E34234] focus:border-transparent'}`}
                 />
-                {errors.firstName && <span className="text-xs text-red-500">{errors.firstName.message}</span>}
+                {errors.name && <span className="text-xs text-red-500">{errors.name.message}</span>}
               </div>
               
               <div className="space-y-1">

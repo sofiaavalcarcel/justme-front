@@ -1,5 +1,5 @@
 
-import { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -67,7 +67,10 @@ export default function SearchPage() {
   const [locationType, setLocationType] = useState<'home' | 'professional'>('professional');
   const [selectedDate, setSelectedDate] = useState('');
   const [selectedTime, setSelectedTime] = useState('');
+  const [activePicker, setActivePicker] = useState<'date' | 'time'>('date');
   const [dbServices, setDbServices] = useState<any[]>([]);
+  const [servicePage, setServicePage] = useState(0);
+  const [serviceSearchQuery, setServiceSearchQuery] = useState('');
 
   useEffect(() => {
     apiClient.get('/services/categories')
@@ -105,7 +108,7 @@ export default function SearchPage() {
 
   const fetchPros = async (searchParams?: any) => {
     if (!geo.latitude || !geo.longitude) return;
-    
+
     setLoadingPros(true);
     try {
       const params = {
@@ -114,14 +117,14 @@ export default function SearchPage() {
         radius: 50,
         ...searchParams
       };
-      
+
       const data = await professionalsService.getNearbyProfessionals(params);
       const mapped = data.map((p: any) => {
         const lat = Number(p.latitude);
         const lng = Number(p.longitude);
         const services = p.professionalServices?.map((ps: any) => ps.service?.category) || [];
         const serviceNames = p.professionalServices?.map((ps: any) => ps.name || ps.service?.name) || [];
-        
+
         return {
           ...p,
           name: p.user?.name || t('search.professional'),
@@ -157,27 +160,51 @@ export default function SearchPage() {
 
   const selectedSvcData = useMemo(() => {
     if (!selectedPro || !selectedService) return null;
-    return selectedPro.professionalServices?.find((ps: any) => 
+    return selectedPro.professionalServices?.find((ps: any) =>
       ps.service?.name === selectedService || ps.name === selectedService || ps.service?.category === selectedService
     );
   }, [selectedPro, selectedService]);
 
   const bookingPrice = selectedSvcData?.price || selectedPro?.price || 0;
 
+  const [revealedCount, setRevealedCount] = useState(0);
+  const [visibleMapPros, setVisibleMapPros] = useState<any[]>([]);
+  const [scanDone, setScanDone] = useState(false);
+  const scanTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // When backend pros load while in results phase, start staggered reveal
+  useEffect(() => {
+    if (phase !== 'results') return;
+    if (revealedCount > 0) return; // already started
+    const allPros = [...backendPros].sort((a, b) => a.distance - b.distance);
+    if (allPros.length === 0) return;
+    allPros.forEach((pro, i) => {
+      setTimeout(() => {
+        setRevealedCount(i + 1);
+        setVisibleMapPros(prev => [...prev, pro]);
+      }, i * 2000 + 500);
+    });
+  }, [backendPros, phase]);
+
   const canSearch = selectedService && selectedDate && selectedTime;
 
   const handleSearch = async () => {
-    setPhase('searching');
-    
-    // Fetch specifically filtered results from backend
+    setRevealedCount(0);
+    setVisibleMapPros([]);
+    setScanDone(false);
+    // Go directly to results layout — radar will show on the map while scanning
+    setPhase('results');
+    setPanelExpanded(true);
+
+    // Start 10s scan timer — after this, show "no more professionals" toast
+    if (scanTimerRef.current) clearTimeout(scanTimerRef.current);
+    scanTimerRef.current = setTimeout(() => setScanDone(true), 10000);
+
     await fetchPros({
       service: selectedService,
       date: selectedDate,
       time: convertTo24h(selectedTime)
     });
-
-    setPhase('results');
-    setPanelExpanded(true);
   };
 
   const convertTo24h = (time12h: string): string => {
@@ -194,7 +221,7 @@ export default function SearchPage() {
   const handleSelectPro = async (id: string) => {
     setSelectedProId(id);
     setPhase('profile');
-    
+
     // Fetch detailed real professional data
     try {
       const details = await professionalsService.getProfessionalById(String(id));
@@ -213,24 +240,24 @@ export default function SearchPage() {
     setAvailableSlots([]);
     setSelectedBookingTime(selectedTime ? convertTo24h(selectedTime) : '');
     const pro = favorites.find(p => String(p.id) === id) || nearby.find(p => String(p.id) === id);
-    
+
     setPhase('booking');
     setPanelExpanded(true);
-    
+
     try {
       // Find the selected service duration, default to 60 if not found
-      const matchSvc = pro?.professionalServices?.find((ps: any) => 
+      const matchSvc = pro?.professionalServices?.find((ps: any) =>
         ps.service?.name === selectedService || ps.service?.category === selectedService
       );
       const duration = matchSvc?.duration || 60;
-      
+
       setSlotsLoading(true);
       const slotsData = await scheduleService.getAvailableSlots(Number(id), selectedDate, duration);
       // Slots can be an array of strings or objects with { time, available }
       const parsedSlots: string[] = Array.isArray(slotsData)
         ? slotsData
-            .filter((s: any) => (typeof s === 'string') || s.available !== false)
-            .map((s: any) => typeof s === 'string' ? s : s.time)
+          .filter((s: any) => (typeof s === 'string') || s.available !== false)
+          .map((s: any) => typeof s === 'string' ? s : s.time)
         : [];
       setAvailableSlots(parsedSlots);
       // If the pre-selected time is valid keep it selected
@@ -258,9 +285,9 @@ export default function SearchPage() {
     setBookingLoading(true);
     try {
       // Resolve the correct professional service id
-      const matchSvc = selectedPro.professionalServices?.find((ps: any) => 
-        ps.service?.name === selectedService || 
-        ps.name === selectedService || 
+      const matchSvc = selectedPro.professionalServices?.find((ps: any) =>
+        ps.service?.name === selectedService ||
+        ps.name === selectedService ||
         ps.service?.category === selectedService
       );
       if (!matchSvc) {
@@ -279,7 +306,7 @@ export default function SearchPage() {
         latitude: geo.latitude || selectedPro.location?.lat,
         longitude: geo.longitude || selectedPro.location?.lng
       });
-      
+
       // Try payment redirect
       try {
         const payment = await paymentsService.createPayment({
@@ -301,7 +328,7 @@ export default function SearchPage() {
       setBookingLoading(false);
       setPhase('confirmed');
       notify('success', t('search.successAlert'), t('search.bookingSuccessDesc'));
-      
+
     } catch (e: any) {
       setBookingLoading(false);
       notify('error', t('search.errorAlert'), e?.response?.data?.message || t('search.errorMsg'));
@@ -315,11 +342,20 @@ export default function SearchPage() {
     setSelectedTime('');
     setSelectedProId(null);
     setPanelExpanded(true);
+    setRevealedCount(0);
+    setVisibleMapPros([]);
+    setScanDone(false);
+    if (scanTimerRef.current) clearTimeout(scanTimerRef.current);
   };
+
+  const allProsCount = favorites.length + nearby.length;
+  // Show radar while loading OR while revealing pros OR for minimum 10s
+  const isScanning = phase === 'results' && !scanDone && (loadingPros || revealedCount < allProsCount || allProsCount === 0);
+
 
   // Map professionals for MapView
   const mapPros = (phase === 'results' || phase === 'profile')
-    ? filtered.map(p => ({ ...p, location: p.location }))
+    ? (phase === 'profile' ? filtered : visibleMapPros).map((p: any) => ({ ...p, location: p.location }))
     : [];
 
   const mapCenter = selectedPro
@@ -336,13 +372,42 @@ export default function SearchPage() {
           professionals={mapPros}
           userLocation={geo.latitude && geo.longitude ? { lat: geo.latitude, lng: geo.longitude } : null}
           onProfessionalClick={handleSelectPro}
-          loading={geo.loading || loadingPros}
+          loading={geo.loading}
           variant="fullscreen"
           selectedId={selectedProId}
           zoom={mapZoom}
           center={mapCenter}
         />
+        {/* Radar overlay — only while scanning, no icon, waves from user dot */}
+        {isScanning && (
+          <div className="uber-scanning-overlay">
+            <div className="uber-scan-radar">
+              {[...Array(10)].map((_, i) => (
+                <div
+                  key={i}
+                  className="uber-scan-ring uber-scan-ring-animated"
+                  style={{ animationDelay: `${i * 1}s` }}
+                />
+              ))}
+            </div>
+          </div>
+        )}
       </div>
+
+      {/* Scan Done Toast */}
+      <AnimatePresence>
+        {scanDone && (
+          <motion.div
+            className="uber-scan-done-toast glass-strong"
+            initial={{ opacity: 0, y: 50, x: '-50%' }}
+            animate={{ opacity: 1, y: 0, x: '-50%' }}
+            exit={{ opacity: 0, y: 50, x: '-50%' }}
+          >
+            No se encontraron más profesionales
+          </motion.div>
+        )}
+      </AnimatePresence>
+
 
       {/* Floating Panels */}
       <AnimatePresence mode="wait">
@@ -350,148 +415,224 @@ export default function SearchPage() {
         {phase === 'choose' && (
           <motion.div
             key="choose"
-            className="uber-panel uber-panel-choose glass-strong"
-            initial={{ y: 100, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            exit={{ y: 100, opacity: 0 }}
-            transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+            className="search-modal-backdrop"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
           >
-            <div className="uber-panel-handle" onClick={() => setPanelExpanded(!panelExpanded)}>
-              <div className="uber-handle-bar" />
-            </div>
+            <motion.div
+              className="search-modal-content glass-strong"
+              initial={{ scale: 0.9, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+            >
+              <div className="search-modal-header">
+                <SearchIcon size={24} />
+                <h2>{t('search.title')}</h2>
+              </div>
 
-            <div className="uber-panel-header">
-              <SearchIcon size={20} />
-              <h2>{t('search.title')}</h2>
-            </div>
+              {/* Location Status Notice */}
+              {(geo.error || (geo.latitude === 5.8268 && geo.longitude === -73.0331)) && (
+                <div className="uber-loc-notice">
+                  <AlertCircle size={14} />
+                  <span>{t('search.usingDefaultLocation')}</span>
+                  <button
+                    className="uber-loc-retry"
+                    onClick={() => window.location.reload()}
+                  >
+                    {t('common.retry')}
+                  </button>
+                </div>
+              )}
 
-            {panelExpanded && (
-              <motion.div
-                key="choose"
-                className="uber-panel-body"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-              >
-                {/* Location Status Notice */}
-                {(geo.error || (geo.latitude === 5.8268 && geo.longitude === -73.0331)) && (
-                  <div className="uber-loc-notice">
-                    <AlertCircle size={14} />
-                    <span>{t('search.usingDefaultLocation')}</span>
-                    <button 
-                      className="uber-loc-retry"
-                      onClick={() => window.location.reload()}
-                    >
-                      {t('common.retry')}
-                    </button>
-                  </div>
-                )}
+              <div className="search-modal-grid">
+                {/* Left Column: Service & Location */}
+                <div className="search-modal-col search-modal-left">
+                  <div className="search-modal-section">
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--space-4)' }}>
+                      <h3 style={{ marginBottom: 0 }}><Sparkles size={16} /> Servicio a Reservar</h3>
+                      <div className="mini-search-wrapper">
+                        <SearchIcon size={14} className="mini-search-icon" />
+                        <input
+                          type="text"
+                          placeholder="Buscar..."
+                          value={serviceSearchQuery}
+                          onChange={(e) => {
+                            setServiceSearchQuery(e.target.value);
+                            setServicePage(0);
+                          }}
+                          className="mini-search-input"
+                        />
+                      </div>
+                    </div>
 
-                {/* Service Categories */}
-                <div className="uber-services-grid">
-                  {dbServices.map((svc) => {
-                    const name = svc.name;
-                    const category = svc.category || name;
-                    const icon = serviceIcons[category] || serviceIcons[name] || <Sparkles size={22} />;
-                    const color = serviceColors[category] || serviceColors[name] || '#8b5cf6';
-                    
-                    return (
-                      <motion.button
-                        key={svc.id}
-                        className={`uber-svc-btn ${selectedService === name ? 'uber-svc-active' : ''}`}
-                        onClick={() => setSelectedService(name)}
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
+                    <AnimatePresence mode="wait">
+                      <motion.div
+                        key={servicePage + serviceSearchQuery}
+                        className="uber-services-grid modal-services-grid"
+                        initial={{ opacity: 0, x: -10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: 10 }}
+                        transition={{ duration: 0.2 }}
                       >
-                        <span className="uber-svc-icon" style={{ color: color, background: `${color}15` }}>
-                          {icon}
-                        </span>
-                        <span className="uber-svc-label">{name}</span>
-                      </motion.button>
-                    );
-                  })}
+                        {(() => {
+                          const normalize = (s: string) => s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+                          const query = normalize(serviceSearchQuery);
+                          const filtered = dbServices.filter(svc =>
+                            normalize(svc.name).includes(query) ||
+                            (svc.category && normalize(svc.category).includes(query))
+                          );
+                          const paginated = filtered.slice(servicePage * 9, (servicePage + 1) * 9);
+
+                          if (paginated.length === 0) {
+                            return <div className="text-sm text-neutral-500 col-span-3 text-center py-4">No se encontraron servicios</div>;
+                          }
+
+                          return paginated.map((svc) => {
+                            const name = svc.name;
+                            const category = svc.category || name;
+                            const icon = serviceIcons[category] || serviceIcons[name] || <Sparkles size={22} />;
+                            const color = serviceColors[category] || serviceColors[name] || '#8b5cf6';
+
+                            return (
+                              <motion.button
+                                key={svc.id}
+                                className={`uber-svc-btn ${selectedService === name ? 'uber-svc-active' : ''}`}
+                                onClick={() => setSelectedService(name)}
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
+                              >
+                                <span className="uber-svc-icon" style={{ color: color, background: `${color}15` }}>
+                                  {icon}
+                                </span>
+                                <span className="uber-svc-label">{name}</span>
+                              </motion.button>
+                            );
+                          });
+                        })()}
+                      </motion.div>
+                    </AnimatePresence>
+
+                    {/* Pagination Dots */}
+                    {(() => {
+                      const normalize = (s: string) => s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+                      const filtered = dbServices.filter(svc => normalize(svc.name).includes(normalize(serviceSearchQuery)) || (svc.category && normalize(svc.category).includes(normalize(serviceSearchQuery))));
+                      if (filtered.length <= 9) return null;
+                      return (
+                        <div className="services-pagination">
+                          {Array.from({ length: Math.ceil(filtered.length / 9) }).map((_, idx) => (
+                            <button
+                              key={idx}
+                              className={`service-page-dot ${servicePage === idx ? 'active' : ''}`}
+                              onClick={() => setServicePage(idx)}
+                            />
+                          ))}
+                        </div>
+                      );
+                    })()}
+                  </div>
+
+                  <div className="search-modal-section mt-4">
+                    <h3><MapPin size={16} /> {t('search.serviceLocation')}</h3>
+                    <div className="uber-loc-toggle">
+                      <button
+                        className={`uber-loc-btn ${locationType === 'professional' ? 'uber-loc-active' : ''}`}
+                        onClick={() => setLocationType('professional')}
+                      >
+                        <Building size={18} />
+                        <span>{t('search.visitPro')}</span>
+                      </button>
+                      <button
+                        className={`uber-loc-btn ${locationType === 'home' ? 'uber-loc-active' : ''}`}
+                        onClick={() => setLocationType('home')}
+                      >
+                        <Home size={18} />
+                        <span>{t('search.homeService')}</span>
+                      </button>
+                    </div>
+                  </div>
                 </div>
 
-                {/* Location Type */}
-                <div className="uber-section">
-                  <h3><MapPin size={16} /> {t('search.serviceLocation')}</h3>
-                  <div className="uber-loc-toggle">
-                    <button
-                      className={`uber-loc-btn ${locationType === 'professional' ? 'uber-loc-active' : ''}`}
-                      onClick={() => setLocationType('professional')}
+                {/* Right Column: Date & Time */}
+                <div className="search-modal-col search-modal-right">
+                  {/* Date Accordion */}
+                  <div className="search-modal-section">
+                    <h3
+                      onClick={() => setActivePicker('date')}
+                      style={{ cursor: 'pointer', display: 'flex', justifyContent: 'space-between' }}
                     >
-                      <Building size={18} />
-                      <span>{t('search.visitPro')}</span>
-                    </button>
-                    <button
-                      className={`uber-loc-btn ${locationType === 'home' ? 'uber-loc-active' : ''}`}
-                      onClick={() => setLocationType('home')}
+                      <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <Calendar size={16} /> {t('search.selectDate')} {selectedDate && activePicker !== 'date' && <span className="text-primary-500 ml-2">({selectedDate})</span>}
+                      </span>
+                      {activePicker === 'date' ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                    </h3>
+                    <AnimatePresence>
+                      {activePicker === 'date' && (
+                        <motion.div
+                          initial={{ height: 0, opacity: 0 }}
+                          animate={{ height: 'auto', opacity: 1 }}
+                          exit={{ height: 0, opacity: 0 }}
+                          style={{ overflow: 'hidden' }}
+                        >
+                          <DatePicker
+                            selectedDate={selectedDate}
+                            onSelect={(date) => {
+                              setSelectedDate(date);
+                              setSelectedTime('');
+                              setActivePicker('time'); // Auto-switch to time
+                            }}
+                          />
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+
+                  {/* Time Accordion */}
+                  <div className="search-modal-section mt-4">
+                    <h3
+                      onClick={() => setActivePicker('time')}
+                      style={{ cursor: 'pointer', display: 'flex', justifyContent: 'space-between' }}
                     >
-                      <Home size={18} />
-                      <span>{t('search.homeService')}</span>
-                    </button>
+                      <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <Clock size={16} /> {t('search.selectTime')} {selectedTime && activePicker !== 'time' && <span className="text-primary-500 ml-2">({selectedTime})</span>}
+                      </span>
+                      {activePicker === 'time' ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                    </h3>
+                    <AnimatePresence>
+                      {activePicker === 'time' && (
+                        <motion.div
+                          initial={{ height: 0, opacity: 0 }}
+                          animate={{ height: 'auto', opacity: 1 }}
+                          exit={{ height: 0, opacity: 0 }}
+                          style={{ overflow: 'hidden' }}
+                        >
+                          <ClockPicker
+                            selectedDate={selectedDate}
+                            selectedTime={selectedTime}
+                            onSelect={(time) => {
+                              setSelectedTime(time);
+                            }}
+                          />
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
                   </div>
                 </div>
-
-                {/* Date and Time Row */}
-                <div className="uber-pickers-row">
-                  <div className="uber-picker-col">
-                    <h3><Calendar size={14} /> {t('search.selectDate')}</h3>
-                    <DatePicker 
-                      selectedDate={selectedDate} 
-                      onSelect={(date) => {
-                        setSelectedDate(date);
-                        setSelectedTime(''); 
-                      }} 
-                    />
-                  </div>
-                  
-                  <div className="uber-picker-col">
-                    <h3><Clock size={14} /> {t('search.selectTime')}</h3>
-                    <ClockPicker 
-                      selectedDate={selectedDate}
-                      selectedTime={selectedTime}
-                      onSelect={setSelectedTime}
-                    />
-                  </div>
-                </div>
-
-                {/* Search Button */}
-                <motion.button
-                  className="uber-search-btn"
-                  disabled={!canSearch}
-                  onClick={handleSearch}
-                  whileHover={canSearch ? { scale: 1.02 } : {}}
-                  whileTap={canSearch ? { scale: 0.98 } : {}}
-                >
-                  <SearchIcon size={20} />
-                  {t('search.searchBtn')}
-                </motion.button>
-              </motion.div>
-            )}
-          </motion.div>
-        )}
-
-        {/* ─── PHASE: Searching ─── */}
-        {phase === 'searching' && (
-          <motion.div
-            key="searching"
-            className="uber-panel uber-panel-searching glass-strong"
-            initial={{ y: 60, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            exit={{ y: 60, opacity: 0 }}
-          >
-            <div className="uber-searching-content">
-              <div className="uber-radar">
-                <div className="uber-radar-ring uber-radar-1" />
-                <div className="uber-radar-ring uber-radar-2" />
-                <div className="uber-radar-ring uber-radar-3" />
-                <div className="uber-radar-dot" />
               </div>
-              <div className="uber-searching-text">
-                <h2>{t('search.searchingTitle')}</h2>
-                <p>{t('search.searchingDesc')}</p>
-              </div>
-            </div>
+
+              {/* Search Button Full Width */}
+              <motion.button
+                className="uber-search-btn search-modal-submit"
+                disabled={!canSearch}
+                onClick={handleSearch}
+                whileHover={canSearch ? { scale: 1.02 } : {}}
+                whileTap={canSearch ? { scale: 0.98 } : {}}
+              >
+                <SearchIcon size={20} />
+                {t('search.searchBtn')}
+              </motion.button>
+
+            </motion.div>
           </motion.div>
         )}
 
@@ -500,10 +641,25 @@ export default function SearchPage() {
           <motion.div
             key="results"
             className="uber-panel uber-panel-results glass-strong"
-            initial={{ y: 100, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            exit={{ y: 100, opacity: 0 }}
-            transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+            initial={{ x: 120, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            exit={{ x: 120, opacity: 0 }}
+            transition={{ type: 'spring', stiffness: 280, damping: 28 }}
+            onAnimationComplete={() => {
+              if (revealedCount > 0) return; // already started
+              // Stagger reveal professionals one by one — sidebar & map
+              const allPros = [...favorites, ...nearby];
+              if (allPros.length === 0) {
+                // Backend still loading — will re-trigger when backendPros updates
+                return;
+              }
+              allPros.forEach((pro, i) => {
+                setTimeout(() => {
+                  setRevealedCount(i + 1);
+                  setVisibleMapPros(prev => [...prev, pro]);
+                }, i * 1000 + 300);
+              });
+            }}
           >
             <div className="uber-panel-handle" onClick={() => setPanelExpanded(!panelExpanded)}>
               <div className="uber-handle-bar" />
@@ -536,40 +692,31 @@ export default function SearchPage() {
                       {t('search.favPros')}
                     </h3>
                     {favorites.map((pro, i) => (
-                      <motion.div
-                        key={pro.id}
-                        className="uber-pro-card uber-pro-fav"
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: i * 0.1 }}
-                        whileHover={{ scale: 1.01 }}
-                        whileTap={{ scale: 1.0 }}
-                      >
-                        <img src={pro.avatar} alt={pro.name} className="uber-pro-avatar" />
-                        <div className="uber-pro-info">
-                          <h4>{pro.name} {pro.verified && <CheckCircle size={13} className="uber-verified" />}</h4>
-                          <div className="uber-pro-meta">
-                            <span><Star size={12} fill="#fbbf24" color="#fbbf24" /> {pro.rating}</span>
-                            <span><MapPin size={12} /> {pro.distance.toFixed(1)} km</span>
-                            <span className="uber-pro-avail">{pro.availability}</span>
+                      revealedCount > i && (
+                        <motion.div
+                          key={pro.id}
+                          className="uber-pro-card uber-pro-fav"
+                          initial={{ opacity: 0, x: 60, scale: 0.92 }}
+                          animate={{ opacity: 1, x: 0, scale: 1 }}
+                          transition={{ type: 'spring', stiffness: 260, damping: 22 }}
+                          whileHover={{ scale: 1.01 }}
+                        >
+                          <img src={pro.avatar} alt={pro.name} className="uber-pro-avatar" />
+                          <div className="uber-pro-info">
+                            <h4>{pro.name} {pro.verified && <CheckCircle size={13} className="uber-verified" />}</h4>
+                            <div className="uber-pro-meta">
+                              <span><Star size={12} fill="#fbbf24" color="#fbbf24" /> {pro.rating}</span>
+                              <span><MapPin size={12} /> {pro.distance.toFixed(1)} km</span>
+                              <span className="uber-pro-avail">{pro.availability}</span>
+                            </div>
+                            <div className="uber-card-actions">
+                              <button className="uber-view-pro-btn ghost" onClick={() => handleSelectPro(pro.id)}>VER PERFIL</button>
+                              <button className="uber-view-pro-btn" onClick={() => handleStartBooking(pro.id)}>AGENDAR</button>
+                            </div>
                           </div>
-                          <div className="uber-card-actions">
-                            <button 
-                              className="uber-view-pro-btn ghost"
-                              onClick={() => handleSelectPro(pro.id)}
-                            >
-                              VER PERFIL
-                            </button>
-                            <button 
-                              className="uber-view-pro-btn"
-                              onClick={() => handleStartBooking(pro.id)}
-                            >
-                              AGENDAR
-                            </button>
-                          </div>
-                        </div>
-                        <div className="uber-pro-price">{new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 }).format(Number(pro.price) || 0)}</div>
-                      </motion.div>
+                          <div className="uber-pro-price">{new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 }).format(Number(pro.price) || 0)}</div>
+                        </motion.div>
+                      )
                     ))}
                   </div>
                 )}
@@ -581,43 +728,34 @@ export default function SearchPage() {
                     {t('search.nearbyPros')}
                   </h3>
                   {nearby.map((pro, i) => (
-                    <motion.div
-                      key={pro.id}
-                      className="uber-pro-card"
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: (favorites.length + i) * 0.1 }}
-                      whileHover={{ scale: 1.01 }}
-                      whileTap={{ scale: 1.0 }}
-                    >
-                      <img src={pro.avatar} alt={pro.name} className="uber-pro-avatar" />
-                      <div className="uber-pro-info">
-                        <h4>{pro.name} {pro.verified && <CheckCircle size={13} className="uber-verified" />}</h4>
-                        <div className="uber-pro-meta">
-                          <span><Star size={12} fill="#fbbf24" color="#fbbf24" /> {pro.rating}</span>
-                          <span><MapPin size={12} /> {pro.distance.toFixed(1)} km</span>
-                          <span className="uber-pro-avail">{pro.availability}</span>
+                    revealedCount > (favorites.length + i) && (
+                      <motion.div
+                        key={pro.id}
+                        className="uber-pro-card"
+                        initial={{ opacity: 0, x: 60, scale: 0.92 }}
+                        animate={{ opacity: 1, x: 0, scale: 1 }}
+                        transition={{ type: 'spring', stiffness: 260, damping: 22 }}
+                        whileHover={{ scale: 1.01 }}
+                      >
+                        <img src={pro.avatar} alt={pro.name} className="uber-pro-avatar" />
+                        <div className="uber-pro-info">
+                          <h4>{pro.name} {pro.verified && <CheckCircle size={13} className="uber-verified" />}</h4>
+                          <div className="uber-pro-meta">
+                            <span><Star size={12} fill="#fbbf24" color="#fbbf24" /> {pro.rating}</span>
+                            <span><MapPin size={12} /> {pro.distance.toFixed(1)} km</span>
+                            <span className="uber-pro-avail">{pro.availability}</span>
+                          </div>
+                          <div className="uber-pro-tags">
+                            {pro.services?.slice(0, 2).map((s: string) => <span key={s}>{s}</span>)}
+                          </div>
+                          <div className="uber-card-actions">
+                            <button className="uber-view-pro-btn ghost" onClick={() => handleSelectPro(pro.id)}>VER PERFIL</button>
+                            <button className="uber-view-pro-btn" onClick={() => handleStartBooking(pro.id)}>AGENDAR</button>
+                          </div>
                         </div>
-                        <div className="uber-pro-tags">
-                          {pro.services?.slice(0, 2).map((s: string) => <span key={s}>{s}</span>)}
-                        </div>
-                        <div className="uber-card-actions">
-                          <button 
-                            className="uber-view-pro-btn ghost"
-                            onClick={() => handleSelectPro(pro.id)}
-                          >
-                            VER PERFIL
-                          </button>
-                          <button 
-                            className="uber-view-pro-btn"
-                            onClick={() => handleStartBooking(pro.id)}
-                          >
-                            AGENDAR
-                          </button>
-                        </div>
-                      </div>
-                      <div className="uber-pro-price">{new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 }).format(Number(pro.price) || 0)}</div>
-                    </motion.div>
+                        <div className="uber-pro-price">{new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 }).format(Number(pro.price) || 0)}</div>
+                      </motion.div>
+                    )
                   ))}
 
                   {nearby.length === 0 && favorites.length === 0 && (
@@ -635,7 +773,7 @@ export default function SearchPage() {
 
         {/* ─── PHASE: Professional Profile ─── */}
         {phase === 'profile' && selectedProDetails && (
-          <ProProfileDetail 
+          <ProProfileDetail
             professional={selectedProDetails}
             onBack={() => { setPhase('results'); setSelectedProId(null); }}
           />
@@ -677,64 +815,64 @@ export default function SearchPage() {
             {panelExpanded && (
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="uber-profile-body">
                 <div className="uber-checkout-summary">
-                   <h3 className="checkout-title">Resumen de tu Reserva</h3>
-                   
-                   <div className="checkout-item">
-                     <span className="checkout-label"><Scissors size={14}/> Servicio:</span>
-                     <span className="checkout-val">{selectedService}</span>
-                   </div>
-                   
-                   <div className="checkout-item">
-                     <span className="checkout-label"><MapPin size={14}/> Ubicación:</span>
-                     <span className="checkout-val">{locationType === 'home' ? t('search.homeService') : (selectedPro.location?.address || 'Local del Profesional')}</span>
-                   </div>
+                  <h3 className="checkout-title">Resumen de tu Reserva</h3>
 
-                   <div className="checkout-item checkout-item-full">
-                     <span className="checkout-label"><Calendar size={14}/> Fecha:</span>
-                     <span className="checkout-val">
-                       {selectedDate && new Date(selectedDate).toLocaleDateString('es-ES', { weekday: 'short', day: 'numeric', month: 'short' })}
-                     </span>
-                   </div>
+                  <div className="checkout-item">
+                    <span className="checkout-label"><Scissors size={14} /> Servicio:</span>
+                    <span className="checkout-val">{selectedService}</span>
+                  </div>
 
-                   {/* ── Time Slot Picker ── */}
-                   <div className="checkout-slots-section">
-                     <span className="checkout-label"><Clock size={14}/> Horario:</span>
-                     {slotsLoading ? (
-                       <div className="checkout-slots-loading">
-                         <Loader2 size={18} className="spin-icon" />
-                         <span>Buscando horarios...</span>
-                       </div>
-                     ) : availableSlots.length > 0 ? (
-                       <div className="checkout-slots-grid">
-                         {availableSlots.map(slot => (
-                           <button
-                             key={slot}
-                             className={`checkout-slot-chip ${selectedBookingTime === slot ? 'checkout-slot-active' : ''}`}
-                             onClick={() => setSelectedBookingTime(slot)}
-                           >
-                             {slot}
-                           </button>
-                         ))}
-                       </div>
-                     ) : (
-                       <div className="checkout-slots-empty">
-                         <span>{selectedBookingTime || selectedTime || 'No hay horarios disponibles — usa la fecha seleccionada'}</span>
-                       </div>
-                     )}
-                   </div>
+                  <div className="checkout-item">
+                    <span className="checkout-label"><MapPin size={14} /> Ubicación:</span>
+                    <span className="checkout-val">{locationType === 'home' ? t('search.homeService') : (selectedPro.location?.address || 'Local del Profesional')}</span>
+                  </div>
 
-                   <div className="checkout-total">
-                     <span>Total Estimado</span>
-                     <strong>${new Intl.NumberFormat('es-CO').format(bookingPrice)}</strong>
-                   </div>
-                   
-                   <p className="checkout-disclaimer">
-                     <ShieldCheck size={12}/> No se te cobrará nada hasta confirmar tu cita.
-                   </p>
+                  <div className="checkout-item checkout-item-full">
+                    <span className="checkout-label"><Calendar size={14} /> Fecha:</span>
+                    <span className="checkout-val">
+                      {selectedDate && new Date(selectedDate).toLocaleDateString('es-ES', { weekday: 'short', day: 'numeric', month: 'short' })}
+                    </span>
+                  </div>
+
+                  {/* ── Time Slot Picker ── */}
+                  <div className="checkout-slots-section">
+                    <span className="checkout-label"><Clock size={14} /> Horario:</span>
+                    {slotsLoading ? (
+                      <div className="checkout-slots-loading">
+                        <Loader2 size={18} className="spin-icon" />
+                        <span>Buscando horarios...</span>
+                      </div>
+                    ) : availableSlots.length > 0 ? (
+                      <div className="checkout-slots-grid">
+                        {availableSlots.map(slot => (
+                          <button
+                            key={slot}
+                            className={`checkout-slot-chip ${selectedBookingTime === slot ? 'checkout-slot-active' : ''}`}
+                            onClick={() => setSelectedBookingTime(slot)}
+                          >
+                            {slot}
+                          </button>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="checkout-slots-empty">
+                        <span>{selectedBookingTime || selectedTime || 'No hay horarios disponibles — usa la fecha seleccionada'}</span>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="checkout-total">
+                    <span>Total Estimado</span>
+                    <strong>${new Intl.NumberFormat('es-CO').format(bookingPrice)}</strong>
+                  </div>
+
+                  <p className="checkout-disclaimer">
+                    <ShieldCheck size={12} /> No se te cobrará nada hasta confirmar tu cita.
+                  </p>
                 </div>
 
-                <motion.button 
-                  className="uber-search-btn confirm-checkout-btn" 
+                <motion.button
+                  className="uber-search-btn confirm-checkout-btn"
                   disabled={(!selectedBookingTime && !selectedTime) || bookingLoading}
                   onClick={handleConfirmBooking}
                   whileHover={selectedBookingTime || selectedTime ? { scale: 1.02 } : {}}

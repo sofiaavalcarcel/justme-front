@@ -12,6 +12,7 @@ import { professionalsService } from '../services/professionalsService';
 import { walletService } from '../services/walletService';
 import { userService } from '../services/userService';
 import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router-dom';
 import { MapView } from '../components/map/MapView';
 import { Navigation } from 'lucide-react';
 import Swal from 'sweetalert2';
@@ -817,41 +818,73 @@ export function UserFavorites() {
   const [favorites, setFavorites] = React.useState<any[]>([]);
   const [loading, setLoading] = React.useState(true);
   const { t } = useTranslation();
+  const navigate = useNavigate();
 
-  React.useEffect(() => {
+  const loadFavorites = () => {
+    setLoading(true);
     userService.getFavorites()
       .then(data => setFavorites(Array.isArray(data) ? data : []))
       .catch(() => setFavorites([]))
       .finally(() => setLoading(false));
+  };
+
+  React.useEffect(() => {
+    loadFavorites();
   }, []);
+
+  const handleRemoveFavorite = async (proId: number) => {
+    try {
+      await userService.toggleFavorite(proId);
+      setFavorites(prev => prev.filter(fav => fav.professionalId !== proId));
+    } catch (e) {
+      console.error('Error toggling favorite:', e);
+    }
+  };
 
   if (loading) return <div style={loadingCenter}><Loader size={28} style={{ animation: 'spin 0.8s linear infinite', color: 'var(--primary-500)' }} /></div>;
 
   return (
     <div style={pageStyle}>
-      <h1 style={headerStyle}>{t('sharedPages.user.favTitle')}</h1>
+      <h1 style={headerStyle}>{t('sharedPages.user.favTitle', 'Mis Profesionales Favoritos')}</h1>
       {favorites.length === 0 ? (
         <div style={{ textAlign: 'center', padding: '3rem', color: 'var(--neutral-400)' }}>
           <Star size={40} style={{ opacity: 0.3, marginBottom: '12px' }} />
-          <p>{t('sharedPages.user.noFavs')}</p>
+          <p>{t('sharedPages.user.noFavs', 'Aún no tienes profesionales favoritos.')}</p>
         </div>
       ) : (
         <div style={listStyle}>
-          {favorites.map((pro: any, i: number) => (
-            <motion.div key={pro.id || i} initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.06 }}>
-              <Card variant="default" padding="md" hover>
-                <div style={rowStyle}>
-                  <Avatar src={pro.avatar || pro.user?.avatar} name={pro.name || pro.user?.name || 'Professional'} size="md" />
-                  <div style={flexStyle}>
-                    <p style={{ fontWeight: 600 }}>{pro.name || pro.user?.name || 'Professional'}</p>
-                    <p style={subStyle}>{(pro.services || []).map((s: any) => typeof s === 'string' ? s : s.name).join(', ') || t('sharedPages.user.noSvcList')}</p>
-                    <Rating value={pro.rating || 0} size="sm" showValue count={pro.reviewCount || 0} />
+          {favorites.map((fav: any, i: number) => {
+            const pro = fav.professional;
+            if (!pro) return null;
+            const proUser = pro.user;
+            const name = proUser?.name || 'Professional';
+            const avatar = proUser?.avatar;
+            const services = (pro.professionalServices || []).map((ps: any) => ps.service?.name).filter(Boolean);
+            const rating = pro.averageRating || 0;
+            const reviewCount = pro.reviewCount || 0;
+            const proId = pro.id;
+
+            return (
+              <motion.div key={fav.id || i} initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.06 }}>
+                <Card variant="default" padding="md" hover>
+                  <div style={rowStyle}>
+                    <Avatar src={avatar} name={name} size="md" />
+                    <div style={flexStyle}>
+                      <p style={{ fontWeight: 600 }}>{name}</p>
+                      <p style={subStyle}>{services.join(', ') || t('sharedPages.user.noSvcList', 'Sin servicios registrados')}</p>
+                      <Rating value={rating} size="sm" showValue count={reviewCount} />
+                    </div>
+                    <div style={{ display: 'flex', gap: 'var(--space-2)', alignItems: 'center' }}>
+                      <Button size="sm" variant="accent" onClick={() => navigate(`/user/professional/${proId}`)}>{t('sharedPages.user.bookBtn', 'Reservar')}</Button>
+                      <Button size="sm" variant="ghost" onClick={() => handleRemoveFavorite(proId)} style={{ color: 'var(--danger-500)', padding: '6px' }}>
+                        <Trash2 size={18} />
+                      </Button>
+                    </div>
                   </div>
-                  <Button size="sm" variant="accent">{t('sharedPages.user.bookBtn')}</Button>
-                </div>
-              </Card>
-            </motion.div>
-          ))}
+                </Card>
+              </motion.div>
+            );
+          })}
         </div>
       )}
     </div>

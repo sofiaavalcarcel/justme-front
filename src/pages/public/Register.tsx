@@ -48,7 +48,6 @@ export default function Register() {
     switch (key) {
       case 'name': err = validateRequired(val, 'Nombre'); break;
       case 'lastName': err = validateRequired(val, 'Apellidos'); break;
-      case 'docType': err = validateRequired(val, 'Tipo de documento'); break;
       case 'docNumber': err = validateRequired(val, 'Número de documento'); break;
       case 'phone': err = validatePhone(val); break;
       case 'email': err = validateEmail(val); break;
@@ -69,13 +68,12 @@ export default function Register() {
   const validateStep = (): boolean => {
     if (step === 0) return true;
     if (step === 1) {
-      const fields = ['name', 'lastName', 'docType', 'docNumber', 'phone'];
+      const fields = ['name', 'lastName', 'docNumber', 'phone'];
       fields.forEach(f => { setTouched(prev => ({ ...prev, [f]: true })); validateField(f); });
       return fields.every(f => {
         const val = form[f as keyof typeof form];
         if (f === 'name') return !validateRequired(val, 'Nombre');
         if (f === 'lastName') return !validateRequired(val, 'Apellidos');
-        if (f === 'docType') return !validateRequired(val, 'Tipo de documento');
         if (f === 'docNumber') return !validateRequired(val, 'Número de documento');
         if (f === 'phone') return !validatePhone(val);
         return true;
@@ -125,7 +123,8 @@ export default function Register() {
         setTouched(prev => ({ ...prev, email: true }));
         setErrors(prev => ({ ...prev, email: 'Este correo ya está registrado' }));
       } else {
-        notify('error', 'Error al registrarse', typeof msg === 'string' ? msg : 'No se pudo crear la cuenta.');
+        const errorMsg = Array.isArray(msg) ? msg.join(', ') : (typeof msg === 'string' ? msg : 'No se pudo crear la cuenta.');
+        notify('error', 'Error al registrarse', errorMsg);
       }
     } finally {
       setLoading(false);
@@ -261,40 +260,7 @@ export default function Register() {
                         )}
                       </AnimatePresence>
                     </div>
-                    {/* Tipo de documento */}
-                    <div className="form-field">
-                      <label style={{ 
-                        fontSize: '0.8rem', 
-                        fontWeight: 700, 
-                        color: 'var(--neutral-700)', 
-                        display: 'block', 
-                        marginBottom: 6,
-                        textTransform: 'uppercase',
-                        letterSpacing: '0.8px',
-                        fontFamily: 'var(--font-display)'
-                      }}>
-                        {t('register.docType')}
-                      </label>
-                      <select
-                        value={form.docType}
-                        onChange={e => update('docType', e.target.value)}
-                        style={{ width: '100%', padding: '10px 14px', borderRadius: 10, border: '1.5px solid var(--neutral-200)', background: 'var(--surface-primary)', color: 'var(--neutral-900)', fontSize: 14 }}
-                      >
-                        <option value="CC">Cédula de Ciudadanía (CC)</option>
-                        <option value="CE">Cédula de Extranjería (CE)</option>
-                        <option value="TI">Tarjeta de Identidad (TI)</option>
-                        <option value="PP">Pasaporte (PP)</option>
-                        <option value="NIT">NIT</option>
-                      </select>
-                      <AnimatePresence>
-                        {touched.docType && errors.docType && (
-                          <motion.span className="field-error" initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 10 }}>
-                            <AlertCircle size={12} /> {errors.docType}
-                          </motion.span>
-                        )}
-                      </AnimatePresence>
 
-                    </div>
                     <div className="form-field">
                       <Input label="Número de documento" icon={<User size={18} />} value={form.docNumber} onChange={e => update('docNumber', e.target.value)} onBlur={() => handleBlur('docNumber')} className={touched.docNumber && errors.docNumber ? 'input-error' : ''} />
                       <AnimatePresence>

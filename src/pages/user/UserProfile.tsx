@@ -1,7 +1,7 @@
 import { useState, useRef, type ChangeEvent, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Camera, MapPin, Heart, CreditCard, Star, Edit3, Save, X, Loader, Navigation } from 'lucide-react';
-import { Card, Avatar, Button, Badge } from '../../components/ui';
+import { Camera, MapPin, Edit3, Save, X, Loader, Navigation } from 'lucide-react';
+import { Card, Avatar, Button } from '../../components/ui';
 import { BecomeProfessionalModal } from '../../components/ui/BecomeProfessionalModal';
 import { useAuth } from '../../context/AuthContext';
 import { useBookings } from '../../hooks/useBookings';
@@ -18,15 +18,6 @@ export default function UserProfile() {
   const navigate = useNavigate();
   const { notify } = useNotification();
   const { t } = useTranslation();
-  
-  const formatCOP = (val: number | string) => {
-    const num = typeof val === 'string' ? parseFloat(val) : val;
-    return new Intl.NumberFormat('es-CO', {
-      style: 'currency',
-      currency: 'COP',
-      minimumFractionDigits: 0,
-    }).format(num || 0).replace('COP', '$');
-  };
 
   const [editing, setEditing] = useState(false);
   const [editName, setEditName] = useState(user?.name || '');
@@ -35,33 +26,21 @@ export default function UserProfile() {
   const [uploadingImage, setUploadingImage] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Favorites & payments from API
-  const [favorites, setFavorites] = useState<any[]>([]);
-  const [payments, setPayments] = useState<any[]>([]);
-  const [dataLoading, setDataLoading] = useState(true);
+  // Favorites count from API
+  const [favoritesCount, setFavoritesCount] = useState(0);
+  const [detectingLocation, setDetectingLocation] = useState(false);
   const [showBecomeProModal, setShowBecomeProModal] = useState(false);
 
-  // Geolocation
-  const [detectingLocation, setDetectingLocation] = useState(false);
-
   useEffect(() => {
-    const fetchData = async () => {
-      setDataLoading(true);
+    const fetchFavorites = async () => {
       try {
-        const [favs, pays] = await Promise.all([
-          userService.getFavorites().catch(() => []),
-          userService.getPaymentHistory().catch(() => []),
-        ]);
-        setFavorites(Array.isArray(favs) ? favs : []);
-        setPayments(Array.isArray(pays) ? pays : []);
+        const favs = await userService.getFavorites();
+        setFavoritesCount(Array.isArray(favs) ? favs.length : 0);
       } catch {
-        setFavorites([]);
-        setPayments([]);
-      } finally {
-        setDataLoading(false);
+        setFavoritesCount(0);
       }
     };
-    fetchData();
+    fetchFavorites();
   }, []);
 
   const handleSaveProfile = async () => {
@@ -72,7 +51,6 @@ export default function UserProfile() {
         name: editName,
         phone: editPhone,
       });
-      // Update local user state
       if (user) {
         setUser({ ...user, name: editName, phone: editPhone });
       }
@@ -88,14 +66,14 @@ export default function UserProfile() {
   const handleImageChange = async (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !user?.id) return;
-    
+
     setUploadingImage(true);
     try {
       const formData = new FormData();
       formData.append('profileImage', file);
-      
+
       const response = await userService.updateProfileImage(String(user.id), formData);
-      
+
       if (user) {
         setUser({ ...user, avatar: response.data?.profileImage || response.data?.avatar || URL.createObjectURL(file) });
       }
@@ -107,12 +85,6 @@ export default function UserProfile() {
       if (fileInputRef.current) fileInputRef.current.value = '';
     }
   };
-
-  // Add Address State
-  const [isAddingAddress, setIsAddingAddress] = useState(false);
-  const [newAddressLabel, setNewAddressLabel] = useState('');
-  const [newAddressText, setNewAddressText] = useState('');
-  const [savingAddress, setSavingAddress] = useState(false);
 
   const handleDetectLocation = () => {
     setDetectingLocation(true);
@@ -140,64 +112,24 @@ export default function UserProfile() {
     );
   };
 
-  const handleAddAddress = async () => {
-    if (!newAddressLabel.trim() || !newAddressText.trim()) {
-      notify('error', t('userProfile.errorTitle'), 'Por favor completa todos los campos de la dirección');
-      return;
-    }
-    setSavingAddress(true);
-    try {
-      const currentAddresses = user?.addresses || [];
-      const updatedAddresses = [
-        ...currentAddresses,
-        { id: Date.now().toString(), label: newAddressLabel, address: newAddressText }
-      ];
-      await userService.updateProfile(String(user?.id), { addresses: updatedAddresses });
-      if (user) {
-        setUser({ ...user, addresses: updatedAddresses });
-      }
-      setNewAddressLabel('');
-      setNewAddressText('');
-      setIsAddingAddress(false);
-      notify('success', 'Éxito', 'Dirección agregada correctamente');
-    } catch {
-      notify('error', t('userProfile.errorTitle'), 'Error al guardar la dirección');
-    } finally {
-      setSavingAddress(false);
-    }
-  };
-
-  const handleDeleteAddress = async (idToDelete: string) => {
-    try {
-      const updatedAddresses = (user?.addresses || []).filter((a: any) => a.id !== idToDelete);
-      await userService.updateProfile(String(user?.id), { addresses: updatedAddresses });
-      if (user) {
-        setUser({ ...user, addresses: updatedAddresses });
-      }
-      notify('success', 'Éxito', 'Dirección eliminada');
-    } catch {
-      notify('error', t('userProfile.errorTitle'), 'Error al eliminar la dirección');
-    }
-  };
-
   return (
     <div className="user-profile-page">
       {/* Profile Header */}
       <motion.div className="profile-header" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
         <div className="profile-avatar-wrap">
           <Avatar src={user?.avatar} name={user?.name || 'User'} size="xl" />
-          <button 
-            className="avatar-edit" 
+          <button
+            className="avatar-edit"
             onClick={() => fileInputRef.current?.click()}
             disabled={uploadingImage}
           >
             {uploadingImage ? <Loader size={14} className="animate-spin" /> : <Camera size={14} />}
           </button>
-          <input 
-            type="file" 
-            accept="image/*" 
-            ref={fileInputRef} 
-            onChange={handleImageChange} 
+          <input
+            type="file"
+            accept="image/*"
+            ref={fileInputRef}
+            onChange={handleImageChange}
             style={{ display: 'none' }}
           />
         </div>
@@ -240,7 +172,7 @@ export default function UserProfile() {
       {/* Stats */}
       <div className="profile-stats">
         <div className="stat-item"><span className="stat-val">{bookings.filter(b => b.status === 'completed').length}</span><span className="stat-label">{t('userProfile.bookings')}</span></div>
-        <div className="stat-item"><span className="stat-val">{favorites.length}</span><span className="stat-label">{t('userProfile.favorites')}</span></div>
+        <div className="stat-item" style={{ cursor: 'pointer' }} onClick={() => navigate('/user/favorites')}><span className="stat-val">{favoritesCount}</span><span className="stat-label">{t('userProfile.favorites')}</span></div>
         <div className="stat-item"><span className="stat-val">{bookings.filter(b => b.status === 'completed').length}</span><span className="stat-label">{t('userProfile.reviews')}</span></div>
       </div>
 
@@ -275,96 +207,6 @@ export default function UserProfile() {
         <Button size="sm" variant="secondary" icon={<Navigation size={14} />} onClick={handleDetectLocation} loading={detectingLocation}>
           {detectingLocation ? t('userProfile.detecting') : t('userProfile.detectBtn')}
         </Button>
-      </section>
-
-      {/* Addresses */}
-      <section className="profile-section">
-        <h2><MapPin size={18} /> {t('userProfile.savedAddr')}</h2>
-        {user && user.addresses && user.addresses.length > 0 ? (
-          user.addresses.map((addr: any) => (
-            <Card key={addr.id} variant="default" padding="sm" className="addr-card">
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <div>
-                  <Badge variant="primary" size="sm">{addr.label || addr.title || 'Address'}</Badge>
-                  <p style={{ marginTop: '4px' }}>{addr.address}</p>
-                </div>
-                <Button size="sm" variant="ghost" onClick={() => handleDeleteAddress(addr.id)} style={{ color: 'var(--danger-500)', padding: '4px' }}>
-                  <X size={16} />
-                </Button>
-              </div>
-            </Card>
-          ))
-        ) : (
-          <p style={{ color: 'var(--neutral-400)', fontSize: 'var(--text-sm)' }}>{t('userProfile.noAddr')}</p>
-        )}
-        
-        {isAddingAddress ? (
-          <div style={{ marginTop: '1rem', padding: '1rem', border: '1px solid var(--neutral-200)', borderRadius: '8px' }}>
-            <input
-              type="text"
-              placeholder="Alias (ej. Casa, Trabajo)"
-              value={newAddressLabel}
-              onChange={(e) => setNewAddressLabel(e.target.value)}
-              style={{ width: '100%', padding: '8px 12px', marginBottom: '8px', borderRadius: '8px', border: '1px solid var(--neutral-200)' }}
-            />
-            <input
-              type="text"
-              placeholder="Dirección completa"
-              value={newAddressText}
-              onChange={(e) => setNewAddressText(e.target.value)}
-              style={{ width: '100%', padding: '8px 12px', marginBottom: '8px', borderRadius: '8px', border: '1px solid var(--neutral-200)' }}
-            />
-            <div style={{ display: 'flex', gap: '8px', marginTop: '8px' }}>
-              <Button size="sm" onClick={handleAddAddress} loading={savingAddress}>{t('userProfile.save')}</Button>
-              <Button size="sm" variant="ghost" onClick={() => setIsAddingAddress(false)}>{t('userProfile.cancel')}</Button>
-            </div>
-          </div>
-        ) : (
-          <Button variant="ghost" size="sm" onClick={() => setIsAddingAddress(true)} style={{ marginTop: '8px' }}>
-            + {t('userProfile.addAddr')}
-          </Button>
-        )}
-      </section>
-
-      {/* Favorites */}
-      <section className="profile-section">
-        <h2><Heart size={18} /> {t('userProfile.favPros')}</h2>
-        {dataLoading ? (
-          <div style={{ textAlign: 'center', padding: '1rem' }}>
-            <Loader size={24} style={{ animation: 'spin 0.8s linear infinite', color: 'var(--primary-500)' }} />
-          </div>
-        ) : favorites.length === 0 ? (
-          <p style={{ color: 'var(--neutral-400)', fontSize: 'var(--text-sm)' }}>{t('userProfile.noFavs')}</p>
-        ) : (
-          <div className="favorites-list">
-            {favorites.map((pro: any) => (
-              <Card key={pro.id} variant="default" padding="sm" hover className="fav-card">
-                <Avatar src={pro.avatar || pro.user?.avatar} name={pro.name || pro.user?.name || 'Professional'} size="sm" />
-                <div className="fav-info"><p className="fav-name">{pro.name || pro.user?.name}</p><p className="fav-svc">{pro.services?.[0]?.name || pro.services?.[0] || ''}</p></div>
-                <div className="fav-rating"><Star size={13} fill="#fbbf24" color="#fbbf24" /> {pro.rating || 0}</div>
-              </Card>
-            ))}
-          </div>
-        )}
-      </section>
-
-      {/* Payment History */}
-      <section className="profile-section">
-        <h2><CreditCard size={18} /> {t('userProfile.payHistory')}</h2>
-        {dataLoading ? (
-          <div style={{ textAlign: 'center', padding: '1rem' }}>
-            <Loader size={24} style={{ animation: 'spin 0.8s linear infinite', color: 'var(--primary-500)' }} />
-          </div>
-        ) : payments.length === 0 ? (
-          <p style={{ color: 'var(--neutral-400)', fontSize: 'var(--text-sm)' }}>{t('userProfile.noPayments')}</p>
-        ) : (
-          payments.slice(0, 5).map((p: any) => (
-            <Card key={p.id} variant="default" padding="sm" className="payment-row">
-              <div className="pay-info"><p className="pay-desc">{p.description || p.type}</p><p className="pay-date">{p.date || new Date(p.createdAt).toLocaleDateString()}</p></div>
-              <span className="pay-amount">-{formatCOP(p.amount || 0)}</span>
-            </Card>
-          ))
-        )}
       </section>
 
       {/* Account Actions */}

@@ -105,6 +105,7 @@
     "name": "Nombre",
     "lastName": "Apellidos",
     "phone": "Teléfono",
+    "docType": "Tipo de Documento",
     "docNumber": "Número de Documento",
     "email": "Correo electrónico",
     "password": "Contraseña",
