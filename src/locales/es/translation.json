@@ -690,6 +690,7 @@
     "continue": "Continuar",
     "docTitle": "Documentación",
     "docDesc": "Sube tus documentos de certificación y proporciona tu número de certificación profesional.",
+    "reasonLabel": "¿Por qué quieres ser profesional en JustMe?",
     "certNum": "Número de Certificación *",
     "certPlc": "Ej: CERT-2024-00123",
     "uploadTitle": "Documentos (PDF o imagen)",

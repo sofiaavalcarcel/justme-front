@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Users, Briefcase, CreditCard, TrendingUp, DollarSign, Activity, 
-  BarChart3, ShieldCheck, Loader, UserPlus, Calendar, Search, 
+import {
+  Users, Briefcase, CreditCard, TrendingUp, DollarSign, Activity,
+  BarChart3, ShieldCheck, Loader, UserPlus, Calendar, Search,
   ChevronLeft, ChevronRight, SlidersHorizontal, ArrowUpRight, ArrowDownLeft,
-  Tag, CheckCircle, XCircle, Clock
+  Tag,
 } from 'lucide-react';
 import { Card, Badge, Avatar, Button, Modal } from '../../components/ui';
 import { useAdminStats } from '../../hooks/useAdminStats';
@@ -27,8 +27,8 @@ export default function AdminDashboard() {
 
   // ─── Category Requests state ─────────────────────────────────────────────────
   const [catRequests, setCatRequests] = useState<any[]>([]);
-  const [catLoading, setCatLoading] = useState(false);
-  const [catReviewing, setCatReviewing] = useState<number | null>(null);
+  const [, setCatLoading] = useState(false);
+  const [,] = useState<number | null>(null);
 
   const fetchCatRequests = async () => {
     setCatLoading(true);
@@ -40,16 +40,18 @@ export default function AdminDashboard() {
     finally { setCatLoading(false); }
   };
 
-  useEffect(() => { fetchCatRequests(); }, []);
+  // ─── Professional Applications state ─────────────────────────────────────────
+  const [proAppCount, setProAppCount] = useState(0);
 
-  const reviewCatRequest = async (id: number, status: 'approved' | 'rejected') => {
-    setCatReviewing(id);
+  const fetchProAppCount = async () => {
     try {
-      await apiClient.patch(`/admin/category-requests/${id}/review`, { action: status });
-      fetchCatRequests();
+      const res = await apiClient.get('/admin/professional-applications', { params: { status: 'pending' } });
+      const list = Array.isArray(res.data) ? res.data : res.data?.data || [];
+      setProAppCount(list.length);
     } catch { /* silencioso */ }
-    finally { setCatReviewing(null); }
   };
+
+  useEffect(() => { fetchCatRequests(); fetchProAppCount(); }, []);
 
   const growthStr = (v: number | undefined) =>
     v === undefined || v === null ? null : v >= 0 ? `+${v}%` : `${v}%`;
@@ -107,6 +109,31 @@ export default function AdminDashboard() {
         <Badge variant="primary" size="md"><ShieldCheck size={14} /> Admin</Badge>
       </div>
 
+      {/* Pending Professional Applications Alert */}
+      {proAppCount > 0 && (
+        <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} style={{ marginBottom: 16 }}>
+          <div style={{
+            display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px',
+            background: 'rgba(249,115,22,0.08)', border: '1px solid rgba(249,115,22,0.3)',
+            borderRadius: 12, color: 'var(--primary-700)'
+          }}>
+            <ShieldCheck size={20} style={{ color: 'var(--primary-500)', flexShrink: 0 }} />
+            <div style={{ flex: 1 }}>
+              <p style={{ margin: 0, fontWeight: 700, fontSize: '0.9rem' }}>Solicitudes de Profesional pendientes</p>
+              <p style={{ margin: 0, fontSize: '0.8rem', opacity: 0.9 }}>
+                Tienes {proAppCount} solicitud{proAppCount === 1 ? '' : 'es'} de usuarios que quieren convertirse en profesionales.
+              </p>
+            </div>
+            <a href="/admin/professional-applications" style={{
+              textDecoration: 'none', padding: '6px 12px', background: 'var(--primary-500)',
+              color: '#fff', borderRadius: 8, fontSize: '0.8rem', fontWeight: 600, whiteSpace: 'nowrap'
+            }}>
+              Revisar
+            </a>
+          </div>
+        </motion.div>
+      )}
+
       {/* Pending Category Requests Alert */}
       {catRequests.length > 0 && (
         <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} style={{ marginBottom: 20 }}>
@@ -163,7 +190,7 @@ export default function AdminDashboard() {
             <div className="legend-item"><span className="dot" style={{ backgroundColor: 'var(--success-500)' }} /> Comisiones</div>
           </div>
         </div>
-        
+
         <div className="chart-container">
           <div className="chart-bars">
             {(() => {
@@ -171,16 +198,16 @@ export default function AdminDashboard() {
               return revenueChart.map((m, i) => {
                 const h = Math.max((m.revenue / maxRev) * 100, m.revenue > 0 ? 5 : 1);
                 const isHovered = hoveredBar === i;
-                
+
                 return (
-                  <div key={i} className="chart-bar-group" 
+                  <div key={i} className="chart-bar-group"
                     onMouseEnter={() => setHoveredBar(i)}
                     onMouseLeave={() => setHoveredBar(null)}>
                     <AnimatePresence>
                       {isHovered && (
-                        <motion.div 
-                          initial={{ opacity: 0, y: 5 }} 
-                          animate={{ opacity: 1, y: 0 }} 
+                        <motion.div
+                          initial={{ opacity: 0, y: 5 }}
+                          animate={{ opacity: 1, y: 0 }}
                           exit={{ opacity: 0, y: 5 }}
                           className="chart-tooltip"
                         >
@@ -190,8 +217,8 @@ export default function AdminDashboard() {
                       )}
                     </AnimatePresence>
                     <motion.div className="chart-bar-wrapper">
-                       <motion.div className="chart-bar"
-                        initial={{ height: 0 }} 
+                      <motion.div className="chart-bar"
+                        initial={{ height: 0 }}
                         animate={{ height: `${h}%`, backgroundColor: isHovered ? 'var(--success-600)' : 'var(--success-500)' }}
                         style={{ opacity: m.revenue === 0 ? 0.2 : 1 }}
                         transition={{ type: 'spring', damping: 20, stiffness: 200 }} />
@@ -223,9 +250,9 @@ export default function AdminDashboard() {
             ) : activities.slice(0, 5).map((activity: any) => (
               <motion.div key={activity.id} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} className="admin-row">
                 <div className={`activity-icon-wrapper ${activity.type ?? 'booking'}`}>
-                  {activity.type === 'registration' ? <UserPlus size={18} /> : 
-                   activity.type === 'revenue' ? <DollarSign size={18} /> :
-                   <Calendar size={18} />}
+                  {activity.type === 'registration' ? <UserPlus size={18} /> :
+                    activity.type === 'revenue' ? <DollarSign size={18} /> :
+                      <Calendar size={18} />}
                 </div>
                 <div className="admin-row-info">
                   <p className="admin-row-name">
@@ -291,7 +318,7 @@ export default function AdminDashboard() {
           <div className="modal-filters">
             <div className="filter-group">
               <label>{t('adminDash.filterType')}</label>
-              <select value={activityFilters.type} onChange={e => setActivityFilters({...activityFilters, type: e.target.value})}>
+              <select value={activityFilters.type} onChange={e => setActivityFilters({ ...activityFilters, type: e.target.value })}>
                 <option value="">{t('adminDash.filterAll')}</option>
                 <option value="registration">{t('adminDash.filterRegistrations')}</option>
                 <option value="booking">{t('adminDash.filterBookings')}</option>
@@ -299,11 +326,11 @@ export default function AdminDashboard() {
             </div>
             <div className="filter-group">
               <label>{t('adminDash.startDate')}</label>
-              <input type="date" value={activityFilters.startDate} onChange={e => setActivityFilters({...activityFilters, startDate: e.target.value})} />
+              <input type="date" value={activityFilters.startDate} onChange={e => setActivityFilters({ ...activityFilters, startDate: e.target.value })} />
             </div>
             <div className="filter-group">
               <label>{t('adminDash.endDate')}</label>
-              <input type="date" value={activityFilters.endDate} onChange={e => setActivityFilters({...activityFilters, endDate: e.target.value})} />
+              <input type="date" value={activityFilters.endDate} onChange={e => setActivityFilters({ ...activityFilters, endDate: e.target.value })} />
             </div>
             <Button size="sm" onClick={handleApplyFilters} icon={<Search size={14} />} style={{ marginTop: 'auto' }}>Filtrar</Button>
           </div>
@@ -317,9 +344,9 @@ export default function AdminDashboard() {
             ) : activities.map((activity: any) => (
               <div key={activity.id} className="modal-row">
                 <div className={`activity-icon-wrapper small ${activity.type ?? 'booking'}`}>
-                  {activity.type === 'registration' ? <UserPlus size={14} /> : 
-                   activity.type === 'revenue' ? <DollarSign size={14} /> :
-                   <Calendar size={14} />}
+                  {activity.type === 'registration' ? <UserPlus size={14} /> :
+                    activity.type === 'revenue' ? <DollarSign size={14} /> :
+                      <Calendar size={14} />}
                 </div>
                 <div className="modal-row-info">
                   <p className="modal-row-title">{activity.description}</p>
@@ -331,9 +358,9 @@ export default function AdminDashboard() {
           </div>
 
           <div className="modal-pagination">
-             <Button size="sm" variant="ghost" disabled={modalPage <= 1} onClick={() => { setModalPage(modalPage-1); fetchActivities(modalPage-1, 10, activityFilters); }}>Anterior</Button>
-             <span>{modalPage} / {activityMeta?.totalPages || 1}</span>
-             <Button size="sm" variant="ghost" disabled={modalPage >= (activityMeta?.totalPages || 1)} onClick={() => { setModalPage(modalPage+1); fetchActivities(modalPage+1, 10, activityFilters); }}>Siguiente</Button>
+            <Button size="sm" variant="ghost" disabled={modalPage <= 1} onClick={() => { setModalPage(modalPage - 1); fetchActivities(modalPage - 1, 10, activityFilters); }}>Anterior</Button>
+            <span>{modalPage} / {activityMeta?.totalPages || 1}</span>
+            <Button size="sm" variant="ghost" disabled={modalPage >= (activityMeta?.totalPages || 1)} onClick={() => { setModalPage(modalPage + 1); fetchActivities(modalPage + 1, 10, activityFilters); }}>Siguiente</Button>
           </div>
         </div>
       </Modal>

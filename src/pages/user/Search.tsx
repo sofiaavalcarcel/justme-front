@@ -170,27 +170,33 @@ export default function SearchPage() {
   const [revealedCount, setRevealedCount] = useState(0);
   const [visibleMapPros, setVisibleMapPros] = useState<any[]>([]);
   const [scanDone, setScanDone] = useState(false);
+  const [isModalMinimized, setIsModalMinimized] = useState(false);
   const scanTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // When backend pros load while in results phase, start staggered reveal
   useEffect(() => {
     if (phase !== 'results') return;
+    if (loadingPros) return; // Wait until fetch is complete
     if (revealedCount > 0) return; // already started
     const allPros = [...backendPros].sort((a, b) => a.distance - b.distance);
     if (allPros.length === 0) return;
     allPros.forEach((pro, i) => {
       setTimeout(() => {
         setRevealedCount(i + 1);
-        setVisibleMapPros(prev => [...prev, pro]);
+        setVisibleMapPros(prev => {
+          if (prev.some(p => p.id === pro.id)) return prev;
+          return [...prev, pro];
+        });
       }, i * 2000 + 500);
     });
-  }, [backendPros, phase]);
+  }, [backendPros, phase, loadingPros]);
 
   const canSearch = selectedService && selectedDate && selectedTime;
 
   const handleSearch = async () => {
     setRevealedCount(0);
     setVisibleMapPros([]);
+    setBackendPros([]); // Clear previous results so they don't leak into the map
     setScanDone(false);
     // Go directly to results layout — radar will show on the map while scanning
     setPhase('results');
@@ -411,8 +417,23 @@ export default function SearchPage() {
 
       {/* Floating Panels */}
       <AnimatePresence mode="wait">
-        {/* ─── PHASE: Choose Service ─── */}
-        {phase === 'choose' && (
+        {/* ─── PHASE: Choose Service (Minimized) ─── */}
+        {phase === 'choose' && isModalMinimized && (
+          <motion.div
+            key="minimized"
+            className="uber-minimized-pill glass-strong"
+            initial={{ y: 100, x: '-50%', opacity: 0 }}
+            animate={{ y: 0, x: '-50%', opacity: 1 }}
+            exit={{ y: 100, x: '-50%', opacity: 0 }}
+            onClick={() => setIsModalMinimized(false)}
+          >
+            <SearchIcon size={18} />
+            <span>{t('search.title')}</span>
+          </motion.div>
+        )}
+
+        {/* ─── PHASE: Choose Service (Expanded) ─── */}
+        {phase === 'choose' && !isModalMinimized && (
           <motion.div
             key="choose"
             className="search-modal-backdrop"
@@ -427,8 +448,16 @@ export default function SearchPage() {
               transition={{ type: 'spring', stiffness: 300, damping: 30 }}
             >
               <div className="search-modal-header">
-                <SearchIcon size={24} />
-                <h2>{t('search.title')}</h2>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <SearchIcon size={24} />
+                  <h2>{t('search.title')}</h2>
+                </div>
+                <button 
+                  onClick={() => setIsModalMinimized(true)}
+                  style={{ marginLeft: 'auto', background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--neutral-500)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '4px', borderRadius: '50%' }}
+                >
+                  <ChevronDown size={24} />
+                </button>
               </div>
 
               {/* Location Status Notice */}

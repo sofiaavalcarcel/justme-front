@@ -606,6 +606,7 @@
     "continue": "Continue",
     "docTitle": "Documentation",
     "docDesc": "Upload your certification documents and provide your professional certification number.",
+    "reasonLabel": "Why do you want to be a professional on JustMe?",
     "certNum": "Certification Number *",
     "certPlc": "Ex: CERT-2024-00123",
     "uploadTitle": "Documents (PDF or image)",

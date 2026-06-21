@@ -9,6 +9,7 @@ interface Category {
   name: string;
   icon?: string;
   category?: string;
+  isActive?: boolean;
 }
 
 interface ExistingService {

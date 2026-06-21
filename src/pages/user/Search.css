@@ -72,6 +72,44 @@
   padding: var(--space-4);
 }
 
+/* ─── Minimized Modal Pill ─── */
+.uber-minimized-pill {
+  position: absolute;
+  bottom: var(--space-8);
+  left: 50%;
+  transform: translateX(-50%) !important;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-6);
+  border-radius: var(--radius-full);
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  color: var(--text-primary);
+  font-weight: 600;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+  cursor: pointer;
+  border: 1px solid var(--neutral-200);
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+[data-theme="dark"] .uber-minimized-pill {
+  background: rgba(24, 24, 32, 0.95);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+.uber-minimized-pill:hover {
+  transform: translateX(-50%) scale(1.05) !important;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+.uber-minimized-pill svg {
+  color: var(--primary-500);
+}
+
 .search-modal-content {
   width: 100%;
   max-width: 900px;

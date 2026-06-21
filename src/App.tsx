@@ -30,6 +30,7 @@ import ProAppointments from './pages/professional/ProAppointments';
 
 // Admin pages
 import AdminDashboard from './pages/admin/AdminDashboard';
+import ProfessionalApplications from './pages/admin/ProfessionalApplications';
 
 // Shared sub-pages
 import {
@@ -108,6 +109,7 @@ function App() {
                 <Route path="bookings" element={<AdminBookings />} />
                 <Route path="analytics" element={<AdminAnalytics />} />
                 <Route path="ai" element={<AdminAi />} />
+                <Route path="professional-applications" element={<ProfessionalApplications />} />
                 <Route path="settings" element={<AdminSettings />} />
                 <Route path="profile" element={<AdminProfile />} />
               </Route>

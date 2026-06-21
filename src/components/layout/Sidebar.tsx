@@ -55,6 +55,7 @@ export function Sidebar({ isOpen = false, onClose }: SidebarProps) {
     { to: '/admin/bookings', icon: <CalendarDays size={20} />, label: 'Citas' },
     { to: '/admin/users', icon: <Users size={20} />, label: t('sidebar.links.users') },
     { to: '/admin/professionals', icon: <Briefcase size={20} />, label: t('sidebar.links.professionals') },
+    { to: '/admin/professional-applications', icon: <ShieldCheck size={20} />, label: 'Solicitudes Pro' },
     { to: '/admin/services', icon: <Scissors size={20} />, label: t('sidebar.links.services') },
     { to: '/admin/settings', icon: <Settings size={20} />, label: t('sidebar.links.settings') },
     { to: '/admin/profile', icon: <UserCircle size={20} />, label: t('sidebar.links.profile') },
