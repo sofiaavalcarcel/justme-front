@@ -3,6 +3,13 @@ import { authService, type LoginCredentials, type RegisterData } from '../servic
 import { verificationService, type VerificationStatus } from '../services/verificationService';
 import { professionalsService } from '../services/professionalsService';
 
+/** Picks the highest-priority role: admin > professional > user */
+function resolveHighestRole(roles: { id: number; name: string }[]): 'user' | 'professional' | 'admin' {
+  if (roles.some(r => r.name === 'admin')) return 'admin';
+  if (roles.some(r => r.name === 'professional')) return 'professional';
+  return 'user';
+}
+
 export interface UserProfile {
   id: string | number;
   name: string;
@@ -98,9 +105,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (token) {
         try {
           const profile = await authService.getProfile();
-          const userRole = profile.roles?.[0]?.name || 'user';
+          const userRole = resolveHighestRole(profile.roles || []);
           setUser({ ...profile, role: userRole });
-          setRole(userRole as any);
+          setRole(userRole);
           if (localStorage.getItem('justme_token')) {
             localStorage.setItem('justme_role', userRole);
           } else {
@@ -146,7 +153,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
       }
 
-      const userRole = response?.user?.roles?.[0]?.name || 'user';
+      const userRole = resolveHighestRole(response?.user?.roles || []);
       if (rememberMe) {
         localStorage.setItem('justme_role', userRole);
         sessionStorage.removeItem('justme_role');
@@ -155,7 +162,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         localStorage.removeItem('justme_role');
       }
       setUser({ ...response.user, role: userRole } as unknown as UserProfile);
-      setRole(userRole as any);
+      setRole(userRole);
 
       if (userRole === 'professional') {
         await refreshVerificationStatus();
@@ -181,7 +188,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
       
       const profile = await authService.getProfile();
-      const userRole = roleParam || profile.roles?.[0]?.name || 'user';
+      const userRole = roleParam || resolveHighestRole(profile.roles || []);
       
       if (rememberMe) {
         localStorage.setItem('justme_role', userRole);
@@ -215,11 +222,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         sessionStorage.removeItem('justme_token');
       }
 
-      const userRole = response?.user?.roles?.[0]?.name || 'user';
+      const userRole = resolveHighestRole(response?.user?.roles || []);
       localStorage.setItem('justme_role', userRole);
       sessionStorage.removeItem('justme_role');
       setUser({ ...response.user, role: userRole } as unknown as UserProfile);
-      setRole(userRole as any);
+      setRole(userRole);
     } catch (error) {
       console.error('Registration error in context:', error);
       throw error;
