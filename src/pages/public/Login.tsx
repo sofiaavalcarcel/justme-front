@@ -16,7 +16,7 @@ import './Login.css';
 export default function Login() {
   const navigate = useNavigate();
   const { t } = useTranslation();
-  const { login, loginWithToken } = useAuth();
+  const { login, loginWithToken, role } = useAuth();
   const { notify } = useNotification();
   const [searchParams] = useSearchParams();
   const [email, setEmail] = useState('');
@@ -39,9 +39,8 @@ export default function Login() {
         try {
           await loginWithToken(token, roleParam);
           
-          // Resolve dashboard using for...of over roles/permissions
-          const storedRole = localStorage.getItem('justme_role') || 'user';
-          const dashboardPath = resolvePostLoginDashboard([{ id: 0, name: storedRole }]);
+          // After loginWithToken, role state is already updated in context
+          const dashboardPath = resolvePostLoginDashboard([{ id: 0, name: role || 'user' }]);
           notify('success', 'Bienvenido de nuevo!', 'Sesión iniciada correctamente.');
           navigate(dashboardPath);
         } catch (err: any) {
@@ -86,9 +85,8 @@ export default function Login() {
     try {
       await login({ email, password });
       
-      // Resolve dashboard using for...of over roles/permissions
-      const storedRole = localStorage.getItem('justme_role') || 'user';
-      const dashboardPath = resolvePostLoginDashboard([{ id: 0, name: storedRole }]);
+      // role is already updated in context by await login(...)
+      const dashboardPath = resolvePostLoginDashboard([{ id: 0, name: role || 'user' }]);
       notify('success', 'Bienvenido de nuevo!', 'Sesión iniciada correctamente.');
       navigate(dashboardPath);
     } catch (err: any) {
