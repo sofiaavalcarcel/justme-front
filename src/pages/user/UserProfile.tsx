@@ -1,15 +1,29 @@
 import { useState, useRef, type ChangeEvent, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { Camera, MapPin, Edit3, Save, X, Loader, Navigation } from 'lucide-react';
-import { Card, Avatar, Button } from '../../components/ui';
+import { motion, AnimatePresence } from 'framer-motion';
+import { 
+  Camera, 
+  MapPin, 
+  User as UserIcon, 
+  Phone, 
+  Mail, 
+  Calendar, 
+  Save, 
+  Loader, 
+  Navigation,
+  Globe,
+  FileText,
+  CheckCircle2,
+  AlertCircle
+} from 'lucide-react';
+import { Card, Avatar, Button, Input } from '../../components/ui';
 import { BecomeProfessionalModal } from '../../components/ui/BecomeProfessionalModal';
 import { useAuth } from '../../context/AuthContext';
 import { useBookings } from '../../hooks/useBookings';
 import { userService } from '../../services/userService';
 import { useNotification } from '../../context/NotificationContext';
 import { useNavigate } from 'react-router-dom';
-
 import { useTranslation } from 'react-i18next';
+
 import './UserProfile.css';
 
 export default function UserProfile() {
@@ -19,17 +33,36 @@ export default function UserProfile() {
   const { notify } = useNotification();
   const { t } = useTranslation();
 
-  const [editing, setEditing] = useState(false);
-  const [editName, setEditName] = useState(user?.name || '');
-  const [editPhone, setEditPhone] = useState(user?.phone || '');
+  const [formData, setFormData] = useState({
+    name: user?.name || '',
+    lastName: user?.lastName || '',
+    phone: user?.phone || '',
+    city: user?.city || '',
+    bio: user?.bio || '',
+    birthDate: user?.birthDate ? new Date(user.birthDate).toISOString().split('T')[0] : '',
+  });
+
   const [saving, setSaving] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
-  // Favorites count from API
   const [favoritesCount, setFavoritesCount] = useState(0);
   const [detectingLocation, setDetectingLocation] = useState(false);
   const [showBecomeProModal, setShowBecomeProModal] = useState(false);
+  const [isDirty, setIsDirty] = useState(false);
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (user) {
+      setFormData({
+        name: user.name || '',
+        lastName: user.lastName || '',
+        phone: user.phone || '',
+        city: user.city || '',
+        bio: user.bio || '',
+        birthDate: user.birthDate ? new Date(user.birthDate).toISOString().split('T')[0] : '',
+      });
+    }
+  }, [user]);
 
   useEffect(() => {
     const fetchFavorites = async () => {
@@ -43,18 +76,21 @@ export default function UserProfile() {
     fetchFavorites();
   }, []);
 
+  const handleInputChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+    setIsDirty(true);
+  };
+
   const handleSaveProfile = async () => {
     if (!user?.id) return;
     setSaving(true);
     try {
-      await userService.updateProfile(String(user.id), {
-        name: editName,
-        phone: editPhone,
-      });
+      await userService.updateProfile(String(user.id), formData);
       if (user) {
-        setUser({ ...user, name: editName, phone: editPhone });
+        setUser({ ...user, ...formData });
       }
-      setEditing(false);
+      setIsDirty(false);
       notify('success', t('userProfile.successProfile'), t('userProfile.successProfileDesc'));
     } catch (err: any) {
       notify('error', t('userProfile.errorTitle'), err?.response?.data?.message || t('userProfile.errorUpdate'));
@@ -69,13 +105,13 @@ export default function UserProfile() {
 
     setUploadingImage(true);
     try {
-      const formData = new FormData();
-      formData.append('profileImage', file);
+      const formDataImage = new FormData();
+      formDataImage.append('image', file);
 
-      const response = await userService.updateProfileImage(String(user.id), formData);
+      const response = await userService.updateProfileImage(String(user.id), formDataImage);
 
       if (user) {
-        setUser({ ...user, avatar: response.data?.profileImage || response.data?.avatar || URL.createObjectURL(file) });
+        setUser({ ...user, avatar: response.data?.avatar || response.data?.profileImage || URL.createObjectURL(file) });
       }
       notify('success', t('userProfile.successProfile'), 'Foto de perfil actualizada correctamente');
     } catch (err: any) {
@@ -112,109 +148,223 @@ export default function UserProfile() {
     );
   };
 
-  return (
-    <div className="user-profile-page">
-      {/* Profile Header */}
-      <motion.div className="profile-header" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-        <div className="profile-avatar-wrap">
-          <Avatar src={user?.avatar} name={user?.name || 'User'} size="xl" />
-          <button
-            className="avatar-edit"
-            onClick={() => fileInputRef.current?.click()}
-            disabled={uploadingImage}
-          >
-            {uploadingImage ? <Loader size={14} className="animate-spin" /> : <Camera size={14} />}
-          </button>
-          <input
-            type="file"
-            accept="image/*"
-            ref={fileInputRef}
-            onChange={handleImageChange}
-            style={{ display: 'none' }}
-          />
-        </div>
+  const completedBookings = bookings.filter(b => b.status === 'completed').length;
+  const registrationDate = user?.createdAt ? new Date(user.createdAt).toLocaleDateString() : '---';
 
-        {editing ? (
-          <div style={{ width: '100%', maxWidth: '300px' }}>
-            <input
-              type="text"
-              value={editName}
-              onChange={(e) => setEditName(e.target.value)}
-              placeholder="Name"
-              style={{ width: '100%', padding: '8px 12px', marginBottom: '8px', borderRadius: '8px', border: '1px solid var(--neutral-200)', background: 'var(--neutral-0)', color: 'var(--neutral-900)' }}
-            />
-            <input
-              type="tel"
-              value={editPhone}
-              onChange={(e) => setEditPhone(e.target.value)}
-              placeholder="Phone"
-              style={{ width: '100%', padding: '8px 12px', marginBottom: '8px', borderRadius: '8px', border: '1px solid var(--neutral-200)', background: 'var(--neutral-0)', color: 'var(--neutral-900)' }}
-            />
-            <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
-              <Button size="sm" onClick={handleSaveProfile} loading={saving} icon={<Save size={14} />}>{t('userProfile.save')}</Button>
-              <Button size="sm" variant="ghost" onClick={() => setEditing(false)} icon={<X size={14} />}>{t('userProfile.cancel')}</Button>
+  return (
+    <div className="user-profile-v2">
+      {/* Dynamic Header with Stats */}
+      <motion.div 
+        className="profile-hero-card"
+        initial={{ opacity: 0, y: 20 }} 
+        animate={{ opacity: 1, y: 0 }}
+      >
+        <Card variant="gradient" padding="lg" className="hero-content">
+          <div className="hero-layout">
+            <div className="avatar-section">
+              <div className="avatar-ring">
+                <Avatar src={user?.avatar} name={user?.name || 'User'} size="xl" />
+                <button
+                  className="avatar-upload-btn"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={uploadingImage}
+                  title="Cambiar foto de perfil"
+                >
+                  {uploadingImage ? <Loader size={16} className="animate-spin" /> : <Camera size={16} />}
+                </button>
+                <input
+                  type="file"
+                  accept="image/*"
+                  ref={fileInputRef}
+                  onChange={handleImageChange}
+                  style={{ display: 'none' }}
+                />
+              </div>
+            </div>
+            
+            <div className="user-info-brief">
+              <h1>{user?.name} {user?.lastName}</h1>
+              <p className="user-membership">
+                <Globe size={14} /> {user?.city || 'Planeta Tierra'} • Miembro desde {registrationDate}
+              </p>
+              
+              <div className="hero-stats">
+                <div className="stat-pill">
+                  <span className="pill-val">{completedBookings}</span>
+                  <span className="pill-label">{t('userProfile.bookings')}</span>
+                </div>
+                <div className="stat-pill clickable" onClick={() => navigate('/user/favorites')}>
+                  <span className="pill-val">{favoritesCount}</span>
+                  <span className="pill-label">{t('userProfile.favorites')}</span>
+                </div>
+                <div className="stat-pill">
+                  <span className="pill-val">{completedBookings}</span>
+                  <span className="pill-label">{t('userProfile.reviews')}</span>
+                </div>
+              </div>
             </div>
           </div>
-        ) : (
-          <>
-            <h1>{user?.name}</h1>
-            <p className="profile-email">{user?.email}</p>
-            <p className="profile-phone">{user?.phone}</p>
-            <Button variant="secondary" size="sm" icon={<Edit3 size={14} />} onClick={() => {
-              setEditName(user?.name || '');
-              setEditPhone(user?.phone || '');
-              setEditing(true);
-            }}>{t('userProfile.edit')}</Button>
-          </>
-        )}
+        </Card>
       </motion.div>
 
-      {/* Stats */}
-      <div className="profile-stats">
-        <div className="stat-item"><span className="stat-val">{bookings.filter(b => b.status === 'completed').length}</span><span className="stat-label">{t('userProfile.bookings')}</span></div>
-        <div className="stat-item" style={{ cursor: 'pointer' }} onClick={() => navigate('/user/favorites')}><span className="stat-val">{favoritesCount}</span><span className="stat-label">{t('userProfile.favorites')}</span></div>
-        <div className="stat-item"><span className="stat-val">{bookings.filter(b => b.status === 'completed').length}</span><span className="stat-label">{t('userProfile.reviews')}</span></div>
-      </div>
-
-      {/* Become Professional CTA */}
-      {user?.role === 'user' && verificationStatus === 'none' && (
-        <div style={{ marginBottom: 'var(--space-4)' }}>
-          <Card variant="gradient" padding="md" className="become-pro-cta">
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <div>
-                <h3 style={{ margin: 0, fontSize: 'var(--text-lg)', color: 'var(--neutral-0)' }}>{t('userProfile.becomePro')}</h3>
-                <p style={{ margin: 0, fontSize: 'var(--text-sm)', color: 'rgba(255,255,255,0.8)' }}>{t('userProfile.becomeProDesc')}</p>
-              </div>
-              <Button size="sm" variant="primary" onClick={() => setShowBecomeProModal(true)}>
-                {t('userProfile.getStarted')}
-              </Button>
+      <div className="profile-grid">
+        {/* Left Column: Form */}
+        <div className="profile-main-content">
+          <Card variant="glass" padding="lg" className="form-container">
+            <div className="section-header">
+              <UserIcon size={20} />
+              <h2>Información Personal</h2>
             </div>
+            
+            <div className="inputs-grid">
+              <Input
+                label="Nombre"
+                name="name"
+                value={formData.name}
+                onChange={handleInputChange}
+                icon={<UserIcon size={18} />}
+              />
+              <Input
+                label="Apellido"
+                name="lastName"
+                value={formData.lastName}
+                onChange={handleInputChange}
+                icon={<UserIcon size={18} />}
+              />
+              <Input
+                label="Email"
+                name="email"
+                value={user?.email || ''}
+                disabled
+                icon={<Mail size={18} />}
+                className="input-disabled"
+              />
+              <Input
+                label="Teléfono"
+                name="phone"
+                value={formData.phone}
+                onChange={handleInputChange}
+                icon={<Phone size={18} />}
+              />
+              <Input
+                label="Ciudad"
+                name="city"
+                value={formData.city}
+                onChange={handleInputChange}
+                icon={<MapPin size={18} />}
+              />
+              <Input
+                label="Fecha de Nacimiento"
+                name="birthDate"
+                type="date"
+                value={formData.birthDate}
+                onChange={handleInputChange}
+                icon={<Calendar size={18} />}
+              />
+            </div>
+
+            <div className="section-header mt-8">
+              <FileText size={20} />
+              <h2>Acerca de mí</h2>
+            </div>
+            <div className="textarea-group">
+              <textarea
+                name="bio"
+                placeholder="Cuéntanos un poco sobre ti..."
+                value={formData.bio}
+                onChange={handleInputChange}
+                className="custom-textarea"
+              />
+            </div>
+
+            <AnimatePresence>
+              {isDirty && (
+                <motion.div 
+                  className="sticky-actions"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 20 }}
+                >
+                  <Button 
+                    fullWidth 
+                    size="lg" 
+                    onClick={handleSaveProfile} 
+                    loading={saving} 
+                    icon={<Save size={20} />}
+                  >
+                    Guardar Cambios
+                  </Button>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </Card>
         </div>
-      )}
 
-      {verificationStatus === 'pending' && (
-        <div style={{ marginBottom: 'var(--space-4)', padding: 'var(--space-3) var(--space-4)', background: 'rgba(245, 158, 11, 0.1)', border: '1px solid rgba(245, 158, 11, 0.3)', borderRadius: 'var(--radius-md)' }}>
-          <p style={{ margin: 0, fontSize: 'var(--text-sm)', color: '#b45309' }}>
-            {t('userProfile.pendingRev')}
-          </p>
+        {/* Right Column: Extras & Actions */}
+        <div className="profile-side-content">
+          {/* Become Professional CTA */}
+          {user?.role === 'user' && verificationStatus === 'none' && (
+            <Card variant="gradient" padding="md" className="pro-cta-card">
+              <h3>¿Quieres ofrecer tus servicios?</h3>
+              <p>Únete a nuestra comunidad de profesionales y empieza a ganar dinero.</p>
+              <Button 
+                variant="secondary" 
+                fullWidth 
+                onClick={() => setShowBecomeProModal(true)}
+              >
+                Ser Profesional
+              </Button>
+            </Card>
+          )}
+
+          {verificationStatus === 'pending' && (
+            <Card padding="md" className="status-card pending">
+              <AlertCircle size={20} />
+              <span>Tu solicitud de perfil profesional está siendo revisada.</span>
+            </Card>
+          )}
+
+          {verificationStatus === 'approved' && (
+            <Card padding="md" className="status-card verified">
+              <CheckCircle2 size={20} />
+              <span>Eres un profesional verificado.</span>
+            </Card>
+          )}
+
+          {/* Location Action */}
+          <Card variant="outlined" padding="md" className="location-action-card">
+            <div className="card-top">
+              <MapPin size={20} />
+              <h4>Ubicación GPS</h4>
+            </div>
+            <p>Actualiza tu ubicación para encontrar profesionales más cerca de ti.</p>
+            <Button 
+              variant="outline" 
+              fullWidth 
+              size="sm" 
+              icon={<Navigation size={14} />} 
+              onClick={handleDetectLocation} 
+              loading={detectingLocation}
+            >
+              Detectar mi ubicación
+            </Button>
+          </Card>
+
+          {/* Danger Zone */}
+          <Card variant="glass" padding="md" className="danger-zone">
+            <h4>Cuenta</h4>
+            <Button 
+              variant="ghost" 
+              fullWidth 
+              className="logout-btn"
+              onClick={() => { logout(); setTimeout(() => openLoginModal(), 100); navigate('/'); }}
+            >
+              Cerrar Sesión
+            </Button>
+          </Card>
         </div>
-      )}
+      </div>
 
-      {/* Location */}
-      <section className="profile-section">
-        <h2><MapPin size={18} /> {t('userProfile.location')}</h2>
-        <Button size="sm" variant="secondary" icon={<Navigation size={14} />} onClick={handleDetectLocation} loading={detectingLocation}>
-          {detectingLocation ? t('userProfile.detecting') : t('userProfile.detectBtn')}
-        </Button>
-      </section>
-
-      {/* Account Actions */}
-      <section className="profile-section" style={{ marginTop: '2rem', textAlign: 'center' }}>
-        <Button variant="danger" onClick={() => { logout(); setTimeout(() => openLoginModal(), 100); navigate('/'); }}>{t('userProfile.logout')}</Button>
-      </section>
-
-      {/* Become Professional Modal */}
       <BecomeProfessionalModal
         isOpen={showBecomeProModal}
         onClose={() => setShowBecomeProModal(false)}

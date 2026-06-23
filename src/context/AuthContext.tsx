@@ -14,6 +14,8 @@ export interface UserProfile {
   id: string | number;
   name: string;
   lastName?: string;
+  docType?: string;
+  docNumber?: string;
   email: string;
   roles: { id: number; name: string }[];
   role?: 'user' | 'professional' | 'admin';
@@ -24,6 +26,11 @@ export interface UserProfile {
   longitude?: number;
   addresses?: { id: string; label?: string; title?: string; current?: boolean; address: string }[];
   isTwoFactorEnabled?: boolean;
+  loyaltyPoints?: number;
+  birthDate?: string;
+  city?: string;
+  bio?: string;
+  createdAt?: string;
 }
 
 interface AuthContextType {
