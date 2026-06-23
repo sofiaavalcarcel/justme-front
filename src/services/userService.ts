@@ -5,6 +5,8 @@ export interface UpdateUserProfileDto {
   lastName?: string;
   phone?: string;
   photoUrl?: string;
+  docType?: string;
+  docNumber?: string;
   latitude?: number;
   longitude?: number;
   city?: string;
