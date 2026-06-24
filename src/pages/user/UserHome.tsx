@@ -5,6 +5,7 @@ import { MapPin, Search, ChevronRight, Scissors, Sparkles, Star, Hand, Heart, Dr
 import { Card, Button, Avatar, Rating } from '../../components/ui';
 import { professionalsService } from '../../services/professionalsService';
 import { useGeolocation } from '../../hooks';
+import { calculateDistance } from '../../services/geolocation';
 import { useTranslation } from 'react-i18next';
 import { apiClient } from '../../services/api';
 import './UserHome.css';
@@ -46,6 +47,30 @@ export default function UserHome() {
     }).format(num || 0).replace('COP', '$');
   };
 
+
+  const getPrice = (pro: any): number => {
+    if (pro.price) return Number(pro.price);
+    const services = pro.professionalServices || pro.services || [];
+    let lowest = Infinity;
+    for (const s of services) {
+      const p = s?.price || s?.service?.price;
+      if (p) {
+        const val = Number(p);
+        if (val < lowest) lowest = val;
+      }
+    }
+    return lowest === Infinity ? 0 : lowest;
+  };
+
+  const getProDistance = (pro: any): string => {
+    const lat = pro.latitude ? parseFloat(pro.latitude) : null;
+    const lng = pro.longitude ? parseFloat(pro.longitude) : null;
+    if (geo.latitude != null && geo.longitude != null && lat != null && lng != null) {
+      return calculateDistance(geo.latitude, geo.longitude, lat, lng).toFixed(1);
+    }
+    return Number(pro.distance || 0).toFixed(1);
+  };
+
   const [dbCategories, setDbCategories] = useState<any[]>([]);
 
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
@@ -53,20 +78,15 @@ export default function UserHome() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Fetch TOP 10 professionals sorted by rating DESC, reviewCount DESC
   useEffect(() => {
     const fetchPros = async () => {
       setLoading(true);
       setError(null);
       try {
-        const lat = geo.latitude || 4.711;
-        const lng = geo.longitude || -74.0721;
-        const data = await professionalsService.getNearbyProfessionals({
-          latitude: lat,
-          longitude: lng,
-          radius: 10,
-        });
+        const data = await professionalsService.getTopProfessionals(10);
         const list = Array.isArray(data) ? data : (data?.data || []);
-        setTopPros(list.slice(0, 4));
+        setTopPros(list);
       } catch (err: any) {
         console.warn('Failed to fetch top professionals', err);
         setError(t('userHome.errorMsg'));
@@ -76,10 +96,8 @@ export default function UserHome() {
       }
     };
 
-    if (!geo.loading) {
-      fetchPros();
-    }
-  }, [geo.loading, geo.latitude, geo.longitude]);
+    fetchPros();
+  }, []);
 
   useEffect(() => {
     apiClient.get('/services/categories')
@@ -176,7 +194,7 @@ export default function UserHome() {
       <section className="home-section">
         <div className="home-section-header">
           <h2>{t('userHome.topProsTitle')}</h2>
-          <button className="see-all" onClick={() => navigate('/user/search')}>{t('userHome.seeAll')} <ChevronRight size={16} /></button>
+          <button className="see-all" onClick={() => navigate('/user/professionals')}>{t('userHome.seeAll')} <ChevronRight size={16} /></button>
         </div>
 
         {loading ? (
@@ -206,17 +224,10 @@ export default function UserHome() {
                 <Card variant="glass" hover className="pro-card-home" onClick={() => navigate(`/user/professional/${pro.id}`)}>
                   <Avatar src={pro.avatar || pro.photoUrl || pro.user?.avatar} name={pro.name || pro.user?.name || 'Professional'} size="lg" />
                   <h3>{pro.name || pro.user?.name || 'Professional'}</h3>
-                  <Rating value={pro.rating || 0} size="sm" showValue count={pro.reviewCount || 0} />
-                  <div className="pro-card-tags">
-                    {(pro.services || []).slice(0, 2).map((s: any) => (
-                      <span key={typeof s === 'string' ? s : s.name} className="pro-tag">
-                        {typeof s === 'string' ? s : s.name}
-                      </span>
-                    ))}
-                  </div>
+                  <Rating value={Number(pro.averageRating || pro.rating || 0)} size="sm" showValue />
                   <div className="pro-card-meta">
-                    <span className="pro-distance"><MapPin size={13} /> {(pro.distance || 0).toFixed(1)} {t('userHome.distanceUnit')}</span>
-                    <span className="pro-price">{t('userHome.fromPrice')} {formatCOP(pro.price || pro.services?.[0]?.price || 0)}</span>
+                    <span className="pro-distance"><MapPin size={13} /> {getProDistance(pro)} {t('userHome.distanceUnit')}</span>
+                    <span className="pro-price">{t('userHome.fromPrice')} {formatCOP(getPrice(pro))}</span>
                   </div>
                 </Card>
               </motion.div>

@@ -105,6 +105,7 @@
     "name": "Nombre",
     "lastName": "Apellidos",
     "phone": "Teléfono",
+    "docType": "Tipo de Documento",
     "docNumber": "Número de Documento",
     "email": "Correo electrónico",
     "password": "Contraseña",
@@ -181,6 +182,13 @@
     "searchWider": "Buscar en una zona más amplia",
     "distanceUnit": "km",
     "fromPrice": "desde"
+  },
+  "allProfessionals": {
+    "title": "Todos los Profesionales",
+    "subtitle": "Los mejores profesionales ordenados por calificación",
+    "emptyTitle": "No hay profesionales disponibles",
+    "emptyDesc": "Aún no hay profesionales registrados en la plataforma. ¡Vuelve pronto!",
+    "backBtn": "Volver al inicio"
   },
   "search": {
     "title": "Elige tu servicio",
@@ -299,6 +307,18 @@
       "confirmed": "Confirmada",
       "completed": "Completada",
       "cancelled": "Cancelada"
+    },
+    "review": {
+      "title": "Calificar servicio",
+      "desc": "Cuéntanos tu experiencia con {{professional}} para ayudar a otros usuarios.",
+      "ratingLabel": "Calidad del servicio",
+      "commentLabel": "Tu reseña",
+      "commentPlaceholder": "Escribe aquí tu opinión sobre el servicio...",
+      "submit": "Enviar Reseña",
+      "success": "¡Reseña enviada!",
+      "successMsg": "Gracias por compartir tu opinión.",
+      "error": "No se pudo enviar la reseña.",
+      "alreadyReviewed": "Reseña enviada"
     }
   },
   "userProfile": {
@@ -393,6 +413,8 @@
       "prev": "Anterior",
       "next": "Siguiente",
       "revTitle": "Reseñas",
+      "revDetail": "Detalle de Reseña",
+      "comment": "Comentario",
       "basedOn": "Basado en {{count}} reseñas",
       "noRev": "Aún no hay reseñas"
     },
@@ -512,7 +534,7 @@
     "revenue": "Ingresos",
     "commissions": "Comisiones",
     "activeServices": "Servicios Activos",
-    "revenueSummary": "Resumen de Ingresos",
+    "revenueSummary": "Resumen de Comisiones",
     "recentPros": "Profesionales Recientes",
     "noPros": "Sin profesionales aún",
     "verified": "Verificado",
@@ -578,8 +600,8 @@
     "subtitle": "Sigue el crecimiento de tu negocio y desbloquea recompensas",
     "milestone": "Hito Mensual",
     "superPro": "Estado Super Pro",
-    "unlockMsg": "Completa 200 servicios este mes para desbloquear un <strong>Bono de Billetera de $50</strong> y <strong>0% de Comisión</strong> por una semana.",
-    "completed": "{{count}} / 200 Servicios Completados",
+    "unlockMsg": "Completa {{target}} servicios este mes para desbloquear un <strong>Bono de Billetera de $50</strong> y <strong>0% de Comisión</strong> por una semana.",
+    "completed": "{{count}} / {{target}} Servicios Completados",
     "toGo": "¡Faltan {{count}}!",
     "metrics": {
       "bookings": "Citas Totales",
@@ -668,6 +690,7 @@
     "continue": "Continuar",
     "docTitle": "Documentación",
     "docDesc": "Sube tus documentos de certificación y proporciona tu número de certificación profesional.",
+    "reasonLabel": "¿Por qué quieres ser profesional en JustMe?",
     "certNum": "Número de Certificación *",
     "certPlc": "Ej: CERT-2024-00123",
     "uploadTitle": "Documentos (PDF o imagen)",

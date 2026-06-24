@@ -1,6 +1,32 @@
 .bpm-modal {
     min-width: 360px;
     max-width: 480px;
+    position: relative;
+    text-align: center;
+}
+
+.bpm-close-btn {
+    position: absolute;
+    top: var(--space-4);
+    right: var(--space-4);
+    background: transparent;
+    border: none;
+    color: var(--neutral-400);
+    cursor: pointer;
+    transition: color 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    z-index: 10;
+}
+
+.bpm-close-btn:hover {
+    color: var(--neutral-900);
+}
+
+[data-theme="dark"] .bpm-close-btn:hover {
+    color: var(--neutral-100);
 }
 
 .bpm-step {
@@ -213,3 +239,111 @@
 .bpm-actions button:last-child {
     flex: 1;
 }
+
+/* Textarea */
+.bpm-textarea {
+    width: 100%;
+    padding: var(--space-3);
+    border: 1px solid var(--neutral-200);
+    border-radius: var(--radius-md);
+    font-size: var(--text-sm);
+    background: var(--neutral-0);
+    color: var(--neutral-900);
+    transition: border-color 0.2s;
+    resize: vertical;
+    font-family: inherit;
+    line-height: 1.5;
+}
+
+[data-theme="dark"] .bpm-textarea {
+    background: var(--neutral-800);
+    border-color: var(--neutral-600);
+    color: var(--neutral-100);
+}
+
+.bpm-textarea:focus {
+    outline: none;
+    border-color: var(--primary-500);
+}
+
+.bpm-char-count {
+    font-size: 11px;
+    color: var(--neutral-400);
+    text-align: right;
+    display: block;
+}
+
+/* Optional label */
+.bpm-optional {
+    font-size: 11px;
+    font-weight: 400;
+    color: var(--neutral-400);
+    margin-left: 4px;
+}
+
+/* Upload disabled state */
+.bpm-upload-label.disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+/* File remove button */
+.bpm-file-remove {
+    margin-left: auto;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--neutral-400);
+    padding: 2px;
+    display: flex;
+    align-items: center;
+    border-radius: 50%;
+    transition: color 0.15s, background 0.15s;
+}
+
+.bpm-file-remove:hover {
+    color: var(--error-500);
+    background: var(--error-50);
+}
+
+/* Success step */
+.bpm-success-step {
+    text-align: center;
+}
+
+.bpm-success-icon {
+    width: 88px;
+    height: 88px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--success-50);
+    color: var(--success-500);
+}
+
+.bpm-info-box {
+    width: 100%;
+    background: var(--primary-50);
+    border: 1px solid var(--primary-100);
+    border-radius: var(--radius-md);
+    padding: var(--space-4);
+    text-align: left;
+    font-size: var(--text-sm);
+    color: var(--primary-700);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+}
+
+[data-theme="dark"] .bpm-info-box {
+    background: rgba(var(--primary-500-rgb, 249, 115, 22), 0.08);
+    border-color: rgba(var(--primary-500-rgb, 249, 115, 22), 0.2);
+    color: var(--primary-300);
+}
+
+.bpm-info-box p {
+    margin: 0;
+    line-height: 1.5;
+}

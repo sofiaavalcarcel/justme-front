@@ -1,8 +1,7 @@
-/* ─── DatePicker Container ─── */
 .dp-container {
   background: rgba(255, 255, 255, 0.04);
-  border-radius: var(--radius-xl);
-  padding: var(--space-3);
+  border-radius: var(--radius-lg);
+  padding: var(--space-2);
   border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
@@ -11,7 +10,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: var(--space-3);
+  margin-bottom: var(--space-2);
 }
 
 .dp-month-info {
@@ -75,7 +74,7 @@
   display: grid;
   grid-template-columns: repeat(7, 1fr);
   gap: 2px;
-  margin-bottom: var(--space-1);
+  margin-bottom: 2px;
 }
 .dp-weekday {
   text-align: center;
@@ -90,7 +89,7 @@
 /* ─── Calendar Grid ─── */
 .dp-grid {
   position: relative;
-  min-height: 160px;
+  min-height: 135px;
 }
 
 .dp-days {

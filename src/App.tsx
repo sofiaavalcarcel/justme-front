@@ -21,17 +21,20 @@ import Booking from './pages/user/Booking';
 import Appointments from './pages/user/Appointments';
 import UserProfile from './pages/user/UserProfile';
 import UserRewards from './pages/user/UserRewards';
+import AllProfessionals from './pages/user/AllProfessionals';
 
 // Professional pages
 import ProDashboard from './pages/professional/ProDashboard';
 import ProWallet from './pages/professional/ProWallet';
+import ProAppointments from './pages/professional/ProAppointments';
 
 // Admin pages
 import AdminDashboard from './pages/admin/AdminDashboard';
+import ProfessionalApplications from './pages/admin/ProfessionalApplications';
 
 // Shared sub-pages
 import {
-  ProBookingRequests, ProCalendar, ProEarnings, ProServices, ProPortfolio, ProProfileEditor, ProReviews,
+  ProBookingRequests, ProEarnings, ProServices, ProPortfolio, ProProfileEditor, ProReviews,
   AdminUsers, AdminProfessionals, AdminServices, AdminTransactions, AdminAnalytics, AdminSettings, AdminProfile, AdminBookings, AdminAi,
   UserFavorites, UserPayments,
 } from './pages/SharedPages';
@@ -66,6 +69,7 @@ function App() {
               <Route path="/user" element={<AppLayout />}>
                 <Route index element={<UserHome />} />
                 <Route path="search" element={<SearchPage />} />
+                <Route path="professionals" element={<AllProfessionals />} />
                 <Route path="professional/:id" element={<ProfessionalProfile />} />
                 <Route path="booking/:id" element={<Booking />} />
                 <Route path="appointments" element={<Appointments />} />
@@ -80,8 +84,9 @@ function App() {
             <Route element={<ProtectedRoute allowedRoles={['professional', 'admin']} />}>
               <Route path="/professional" element={<AppLayout />}>
                 <Route index element={<ProDashboard />} />
+                <Route path="appointments" element={<ProAppointments />} />
                 <Route path="requests" element={<ProBookingRequests />} />
-                <Route path="calendar" element={<ProCalendar />} />
+                <Route path="calendar" element={<ProAppointments />} />
                 <Route path="earnings" element={<ProEarnings />} />
                 <Route path="wallet" element={<ProWallet />} />
                 <Route path="services" element={<ProServices />} />
@@ -104,6 +109,7 @@ function App() {
                 <Route path="bookings" element={<AdminBookings />} />
                 <Route path="analytics" element={<AdminAnalytics />} />
                 <Route path="ai" element={<AdminAi />} />
+                <Route path="professional-applications" element={<ProfessionalApplications />} />
                 <Route path="settings" element={<AdminSettings />} />
                 <Route path="profile" element={<AdminProfile />} />
               </Route>

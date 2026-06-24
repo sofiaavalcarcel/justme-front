@@ -182,6 +182,13 @@
     "distanceUnit": "km",
     "fromPrice": "from"
   },
+  "allProfessionals": {
+    "title": "All Professionals",
+    "subtitle": "Top-rated professionals sorted by rating",
+    "emptyTitle": "No professionals available",
+    "emptyDesc": "There are no professionals registered on the platform yet. Check back soon!",
+    "backBtn": "Back to home"
+  },
   "search": {
     "title": "Choose your service",
     "visitPro": "Visit Professional",
@@ -468,7 +475,7 @@
     "revenue": "Revenue",
     "commissions": "Commissions",
     "activeServices": "Active Services",
-    "revenueSummary": "Revenue Summary",
+    "revenueSummary": "Commissions Summary",
     "recentPros": "Recent Professionals",
     "noPros": "No professionals yet",
     "verified": "Verified",
@@ -599,6 +606,7 @@
     "continue": "Continue",
     "docTitle": "Documentation",
     "docDesc": "Upload your certification documents and provide your professional certification number.",
+    "reasonLabel": "Why do you want to be a professional on JustMe?",
     "certNum": "Certification Number *",
     "certPlc": "Ex: CERT-2024-00123",
     "uploadTitle": "Documents (PDF or image)",

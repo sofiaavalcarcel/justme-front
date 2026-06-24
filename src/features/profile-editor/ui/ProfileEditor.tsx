@@ -10,9 +10,9 @@ import { Button } from '../../../components/ui/Button';
 import { Input } from '../../../components/ui/Input';
 
 const profileSchema = z.object({
-  firstName: z.string().min(2, 'El nombre es muy corto'),
+  name: z.string().min(2, 'El nombre es muy corto'),
   lastName: z.string().min(2, 'El apellido es muy corto'),
-  address: z.string().min(5, 'Dirección requerida'),
+  address: z.string().min(5, 'Dirección requerida').optional().or(z.literal('')),
 });
 
 type ProfileFormValues = z.infer<typeof profileSchema>;
@@ -25,21 +25,46 @@ export const ProfileEditor = () => {
   const { register, handleSubmit, formState: { errors } } = useForm<ProfileFormValues>({
     resolver: zodResolver(profileSchema),
     defaultValues: {
-      firstName: user?.firstName || '',
+      name: user?.name || '',
       lastName: user?.lastName || '',
       address: '', 
     },
   });
 
   const updateMutation = useMutation({
-    mutationFn: async (formData: FormData) => {
-      const { data } = await apiClient.patch(`/users/${user?.id}/profile`, formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      });
+    mutationFn: async ({ values, file }: { values: ProfileFormValues, file: File | null }) => {
+      // 1. Actualizar datos (PUT /users/:id)
+      const payload = {
+        name: values.name,
+        lastName: values.lastName,
+        // address no existe directamente en UpdateUserDto como string, pero si lo requiere la API, se puede enviar.
+      };
+      
+      const { data } = await apiClient.put(`/users/${user?.id}`, payload);
+      
+      // 2. Si hay foto, subir avatar (POST /users/:id/avatar)
+      if (file) {
+        const formData = new FormData();
+        formData.append('image', file); // El backend espera 'image'
+        await apiClient.post(`/users/${user?.id}/avatar`, formData, {
+          headers: { 'Content-Type': 'multipart/form-data' },
+        });
+      }
+      
+      // Retornar data o hacer un refetch (el backend actualiza la DB)
       return data;
     },
-    onSuccess: (response) => {
-      if (user && token) login({ ...user, ...response.data }, token);
+    onSuccess: async () => {
+      // Lo ideal sería obtener el perfil nuevamente
+      try {
+        const { data: updatedProfile } = await apiClient.get(`/users/${user?.id}`);
+        if (user && token && updatedProfile) {
+           login({ ...user, ...updatedProfile }, token);
+        }
+      } catch (e) {
+         // Fallback
+         if (user && token) login({ ...user }, token);
+      }
     },
   });
 
@@ -52,13 +77,7 @@ export const ProfileEditor = () => {
   };
 
   const onSubmit = (values: ProfileFormValues) => {
-    const formData = new FormData();
-    formData.append('firstName', values.firstName);
-    formData.append('lastName', values.lastName);
-    formData.append('address', values.address);
-    if (selectedFile) formData.append('profileImage', selectedFile);
-    
-    updateMutation.mutate(formData);
+    updateMutation.mutate({ values, file: selectedFile });
   };
 
   return (
@@ -67,7 +86,7 @@ export const ProfileEditor = () => {
         <Avatar.Root className="w-24 h-24 rounded-full overflow-hidden bg-gray-100 border-2 border-[#E34234]">
           <Avatar.Image src={previewImage || undefined} className="w-full h-full object-cover" />
           <Avatar.Fallback className="flex items-center justify-center w-full h-full text-xl text-gray-500 font-semibold">
-            {user?.firstName?.[0]}{user?.lastName?.[0]}
+            {user?.name?.[0]}{user?.lastName?.[0]}
           </Avatar.Fallback>
         </Avatar.Root>
         <label className="cursor-pointer text-sm font-medium text-[#E34234] hover:text-red-700 transition-colors">
@@ -77,7 +96,7 @@ export const ProfileEditor = () => {
       </div>
 
       <div className="space-y-4">
-        <Input label="Nombre" error={errors.firstName?.message} {...register('firstName')} />
+        <Input label="Nombre" error={errors.name?.message} {...register('name')} />
         <Input label="Apellido" error={errors.lastName?.message} {...register('lastName')} />
         <Input label="Dirección" placeholder="Empieza a escribir..." error={errors.address?.message} {...register('address')} />
       </div>

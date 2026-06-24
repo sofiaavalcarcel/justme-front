@@ -1,13 +1,15 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Users, Briefcase, CreditCard, TrendingUp, DollarSign, Activity, 
-  BarChart3, ShieldCheck, Loader, UserPlus, Calendar, Search, 
-  ChevronLeft, ChevronRight, SlidersHorizontal, ArrowUpRight, ArrowDownLeft, Percent
+import {
+  Users, Briefcase, CreditCard, TrendingUp, DollarSign, Activity,
+  BarChart3, ShieldCheck, Loader, UserPlus, Calendar, Search,
+  ChevronLeft, ChevronRight, SlidersHorizontal, ArrowUpRight, ArrowDownLeft,
+  Tag,
 } from 'lucide-react';
 import { Card, Badge, Avatar, Button, Modal } from '../../components/ui';
 import { useAdminStats } from '../../hooks/useAdminStats';
 import { useTranslation } from 'react-i18next';
+import { apiClient } from '../../services/api';
 import './AdminDashboard.css';
 
 export default function AdminDashboard() {
@@ -23,6 +25,34 @@ export default function AdminDashboard() {
   const [activityFilters, setActivityFilters] = useState({ type: '', startDate: '', endDate: '' });
   const [hoveredBar, setHoveredBar] = useState<number | null>(null);
 
+  // ─── Category Requests state ─────────────────────────────────────────────────
+  const [catRequests, setCatRequests] = useState<any[]>([]);
+  const [, setCatLoading] = useState(false);
+  const [,] = useState<number | null>(null);
+
+  const fetchCatRequests = async () => {
+    setCatLoading(true);
+    try {
+      const res = await apiClient.get('/admin/category-requests', { params: { status: 'pending' } });
+      const list = Array.isArray(res.data) ? res.data : res.data?.data || [];
+      setCatRequests(list);
+    } catch { /* silencioso */ }
+    finally { setCatLoading(false); }
+  };
+
+  // ─── Professional Applications state ─────────────────────────────────────────
+  const [proAppCount, setProAppCount] = useState(0);
+
+  const fetchProAppCount = async () => {
+    try {
+      const res = await apiClient.get('/admin/professional-applications', { params: { status: 'pending' } });
+      const list = Array.isArray(res.data) ? res.data : res.data?.data || [];
+      setProAppCount(list.length);
+    } catch { /* silencioso */ }
+  };
+
+  useEffect(() => { fetchCatRequests(); fetchProAppCount(); }, []);
+
   const growthStr = (v: number | undefined) =>
     v === undefined || v === null ? null : v >= 0 ? `+${v}%` : `${v}%`;
 
@@ -33,8 +63,7 @@ export default function AdminDashboard() {
     { label: t('adminDash.totalUsers'), value: stats.totalUsers?.toLocaleString('es-CO') ?? '0', icon: <Users size={20} />, color: 'var(--primary-500)', bg: 'var(--primary-50)', change: growthStr(analytics?.monthlyGrowth) },
     { label: t('adminDash.professionals'), value: stats.totalProfessionals?.toLocaleString('es-CO') ?? '0', icon: <Briefcase size={20} />, color: 'var(--accent-500)', bg: 'var(--accent-100)', change: null },
     { label: t('adminDash.totalBookings'), value: stats.totalBookings?.toLocaleString('es-CO') ?? '0', icon: <Activity size={20} />, color: 'var(--success-500)', bg: 'var(--success-50)', change: growthStr(analytics?.bookingRate) },
-    { label: t('adminDash.revenue'), value: `$${fmt(stats.totalRevenue ?? 0)}`, icon: <DollarSign size={20} />, color: '#fbbf24', bg: '#fbbf2415', change: null },
-    { label: t('adminDash.commissions'), value: `$${fmt(stats.commissionsCollected ?? 0)}`, icon: <CreditCard size={20} />, color: 'var(--error-500)', bg: 'var(--error-50)', change: null },
+    { label: t('adminDash.commissions'), value: `$${fmt(stats.commissionsCollected ?? 0)}`, icon: <CreditCard size={20} />, color: 'var(--success-500)', bg: 'var(--success-50)', change: null },
     { label: t('adminDash.activeServices'), value: stats.activeServices?.toLocaleString('es-CO') ?? '—', icon: <BarChart3 size={20} />, color: '#06b6d4', bg: '#06b6d415', change: null },
   ] : [];
 
@@ -80,6 +109,56 @@ export default function AdminDashboard() {
         <Badge variant="primary" size="md"><ShieldCheck size={14} /> Admin</Badge>
       </div>
 
+      {/* Pending Professional Applications Alert */}
+      {proAppCount > 0 && (
+        <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} style={{ marginBottom: 16 }}>
+          <div style={{
+            display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px',
+            background: 'rgba(249,115,22,0.08)', border: '1px solid rgba(249,115,22,0.3)',
+            borderRadius: 12, color: 'var(--primary-700)'
+          }}>
+            <ShieldCheck size={20} style={{ color: 'var(--primary-500)', flexShrink: 0 }} />
+            <div style={{ flex: 1 }}>
+              <p style={{ margin: 0, fontWeight: 700, fontSize: '0.9rem' }}>Solicitudes de Profesional pendientes</p>
+              <p style={{ margin: 0, fontSize: '0.8rem', opacity: 0.9 }}>
+                Tienes {proAppCount} solicitud{proAppCount === 1 ? '' : 'es'} de usuarios que quieren convertirse en profesionales.
+              </p>
+            </div>
+            <a href="/admin/professional-applications" style={{
+              textDecoration: 'none', padding: '6px 12px', background: 'var(--primary-500)',
+              color: '#fff', borderRadius: 8, fontSize: '0.8rem', fontWeight: 600, whiteSpace: 'nowrap'
+            }}>
+              Revisar
+            </a>
+          </div>
+        </motion.div>
+      )}
+
+      {/* Pending Category Requests Alert */}
+      {catRequests.length > 0 && (
+        <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} style={{ marginBottom: 20 }}>
+          <div style={{
+            display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px',
+            background: 'var(--warning-50, #fefce8)', border: '1px solid var(--warning-200, #fef08a)',
+            borderRadius: 12, color: 'var(--warning-800, #854d0e)'
+          }}>
+            <Tag size={20} style={{ color: 'var(--warning-500, #eab308)' }} />
+            <div style={{ flex: 1 }}>
+              <p style={{ margin: 0, fontWeight: 700, fontSize: '0.9rem' }}>Solicitudes de categorías pendientes</p>
+              <p style={{ margin: 0, fontSize: '0.8rem', opacity: 0.9 }}>
+                Tienes {catRequests.length} solicitud{catRequests.length === 1 ? '' : 'es'} de categorías esperando tu revisión.
+              </p>
+            </div>
+            <a href="/admin/services" style={{
+              textDecoration: 'none', padding: '6px 12px', background: 'var(--warning-500, #eab308)',
+              color: '#fff', borderRadius: 8, fontSize: '0.8rem', fontWeight: 600
+            }}>
+              Revisar
+            </a>
+          </div>
+        </motion.div>
+      )}
+
       {/* KPIs */}
       <div className="admin-kpis">
         {kpis.map((kpi, i) => (
@@ -105,13 +184,13 @@ export default function AdminDashboard() {
         <div className="chart-header">
           <div>
             <h2>{t('adminDash.revenueSummary')}</h2>
-          <p className="chart-subtitle">Últimos 12 meses · Pagos completados</p>
+            <p className="chart-subtitle">Últimos 12 meses · Comisiones cobradas</p>
           </div>
           <div className="chart-legend">
-            <div className="legend-item"><span className="dot" /> Ingresos</div>
+            <div className="legend-item"><span className="dot" style={{ backgroundColor: 'var(--success-500)' }} /> Comisiones</div>
           </div>
         </div>
-        
+
         <div className="chart-container">
           <div className="chart-bars">
             {(() => {
@@ -119,16 +198,16 @@ export default function AdminDashboard() {
               return revenueChart.map((m, i) => {
                 const h = Math.max((m.revenue / maxRev) * 100, m.revenue > 0 ? 5 : 1);
                 const isHovered = hoveredBar === i;
-                
+
                 return (
-                  <div key={i} className="chart-bar-group" 
+                  <div key={i} className="chart-bar-group"
                     onMouseEnter={() => setHoveredBar(i)}
                     onMouseLeave={() => setHoveredBar(null)}>
                     <AnimatePresence>
                       {isHovered && (
-                        <motion.div 
-                          initial={{ opacity: 0, y: 5 }} 
-                          animate={{ opacity: 1, y: 0 }} 
+                        <motion.div
+                          initial={{ opacity: 0, y: 5 }}
+                          animate={{ opacity: 1, y: 0 }}
                           exit={{ opacity: 0, y: 5 }}
                           className="chart-tooltip"
                         >
@@ -138,9 +217,9 @@ export default function AdminDashboard() {
                       )}
                     </AnimatePresence>
                     <motion.div className="chart-bar-wrapper">
-                       <motion.div className="chart-bar"
-                        initial={{ height: 0 }} 
-                        animate={{ height: `${h}%`, backgroundColor: isHovered ? 'var(--primary-600)' : 'var(--primary-500)' }}
+                      <motion.div className="chart-bar"
+                        initial={{ height: 0 }}
+                        animate={{ height: `${h}%`, backgroundColor: isHovered ? 'var(--success-600)' : 'var(--success-500)' }}
                         style={{ opacity: m.revenue === 0 ? 0.2 : 1 }}
                         transition={{ type: 'spring', damping: 20, stiffness: 200 }} />
                     </motion.div>
@@ -171,9 +250,9 @@ export default function AdminDashboard() {
             ) : activities.slice(0, 5).map((activity: any) => (
               <motion.div key={activity.id} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} className="admin-row">
                 <div className={`activity-icon-wrapper ${activity.type ?? 'booking'}`}>
-                  {activity.type === 'registration' ? <UserPlus size={18} /> : 
-                   activity.type === 'revenue' ? <DollarSign size={18} /> :
-                   <Calendar size={18} />}
+                  {activity.type === 'registration' ? <UserPlus size={18} /> :
+                    activity.type === 'revenue' ? <DollarSign size={18} /> :
+                      <Calendar size={18} />}
                 </div>
                 <div className="admin-row-info">
                   <p className="admin-row-name">
@@ -206,28 +285,32 @@ export default function AdminDashboard() {
                 <CreditCard size={32} opacity={0.3} />
                 {t('adminDash.noTx')}
               </div>
-            ) : transactions.map((t: any) => (
-              <motion.div key={t.id} initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} className="admin-row">
-                <div className={`admin-transaction-icon ${t.type}`}>
-                  {t.type === 'payment' ? <ArrowDownLeft size={18} /> : 
-                   t.type === 'payout' ? <ArrowUpRight size={18} /> :
-                   <Percent size={18} />}
-                </div>
-                <div className="admin-row-info">
-                  <p className="admin-row-name">{t.description ?? t('adminDash.transaction')}</p>
-                  <p className="admin-row-detail">{new Date(t.createdAt ?? t.date).toLocaleDateString()} • <span style={{ textTransform: 'capitalize' }}>{t.type}</span></p>
-                </div>
-                <div style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4 }}>
-                  <span className={`admin-amount ${t.type === 'commission' || t.type === 'payment' ? 'positive' : 'negative'}`}>
-                    {t.type === 'commission' || t.type === 'payment' ? '+' : '-'}${Math.abs(parseFloat(t.amount)).toLocaleString()}
-                  </span>
-                  <Badge variant={t.status === 'completed' ? 'success' : 'warning'} size="sm">{t.status}</Badge>
-                </div>
-              </motion.div>
-            ))}
+            ) : transactions.map((t: any) => {
+              const tType = (t.type || '').toUpperCase();
+              const isPositive = tType === 'COMMISSION' || tType === 'TOP_UP' || tType === 'BONUS' || tType === 'PAYMENT';
+              return (
+                <motion.div key={t.id} initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} className="admin-row">
+                  <div className={`admin-transaction-icon ${t.type.toLowerCase()}`}>
+                    {isPositive ? <ArrowDownLeft size={18} /> : <ArrowUpRight size={18} />}
+                  </div>
+                  <div className="admin-row-info">
+                    <p className="admin-row-name">{t.description ?? t('adminDash.transaction')}</p>
+                    <p className="admin-row-detail">{new Date(t.createdAt ?? t.date).toLocaleDateString()} • <span style={{ textTransform: 'capitalize' }}>{t.type.toLowerCase().replace('_', ' ')}</span></p>
+                  </div>
+                  <div style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4 }}>
+                    <span className={`admin-amount ${isPositive ? 'positive' : 'negative'}`}>
+                      {isPositive ? '+' : '-'}${Math.abs(parseFloat(t.amount)).toLocaleString()}
+                    </span>
+                    <Badge variant={t.status === 'completed' ? 'success' : 'warning'} size="sm">{t.status}</Badge>
+                  </div>
+                </motion.div>
+              );
+            })}
           </div>
         </section>
       </div>
+
+
 
       {/* Activities Full Modal */}
       <Modal isOpen={showActivityModal} onClose={() => setShowActivityModal(false)} title={t('adminDash.activitiesModalTitle')}>
@@ -235,7 +318,7 @@ export default function AdminDashboard() {
           <div className="modal-filters">
             <div className="filter-group">
               <label>{t('adminDash.filterType')}</label>
-              <select value={activityFilters.type} onChange={e => setActivityFilters({...activityFilters, type: e.target.value})}>
+              <select value={activityFilters.type} onChange={e => setActivityFilters({ ...activityFilters, type: e.target.value })}>
                 <option value="">{t('adminDash.filterAll')}</option>
                 <option value="registration">{t('adminDash.filterRegistrations')}</option>
                 <option value="booking">{t('adminDash.filterBookings')}</option>
@@ -243,11 +326,11 @@ export default function AdminDashboard() {
             </div>
             <div className="filter-group">
               <label>{t('adminDash.startDate')}</label>
-              <input type="date" value={activityFilters.startDate} onChange={e => setActivityFilters({...activityFilters, startDate: e.target.value})} />
+              <input type="date" value={activityFilters.startDate} onChange={e => setActivityFilters({ ...activityFilters, startDate: e.target.value })} />
             </div>
             <div className="filter-group">
               <label>{t('adminDash.endDate')}</label>
-              <input type="date" value={activityFilters.endDate} onChange={e => setActivityFilters({...activityFilters, endDate: e.target.value})} />
+              <input type="date" value={activityFilters.endDate} onChange={e => setActivityFilters({ ...activityFilters, endDate: e.target.value })} />
             </div>
             <Button size="sm" onClick={handleApplyFilters} icon={<Search size={14} />} style={{ marginTop: 'auto' }}>Filtrar</Button>
           </div>
@@ -261,9 +344,9 @@ export default function AdminDashboard() {
             ) : activities.map((activity: any) => (
               <div key={activity.id} className="modal-row">
                 <div className={`activity-icon-wrapper small ${activity.type ?? 'booking'}`}>
-                  {activity.type === 'registration' ? <UserPlus size={14} /> : 
-                   activity.type === 'revenue' ? <DollarSign size={14} /> :
-                   <Calendar size={14} />}
+                  {activity.type === 'registration' ? <UserPlus size={14} /> :
+                    activity.type === 'revenue' ? <DollarSign size={14} /> :
+                      <Calendar size={14} />}
                 </div>
                 <div className="modal-row-info">
                   <p className="modal-row-title">{activity.description}</p>
@@ -275,9 +358,9 @@ export default function AdminDashboard() {
           </div>
 
           <div className="modal-pagination">
-             <Button size="sm" variant="ghost" disabled={modalPage <= 1} onClick={() => { setModalPage(modalPage-1); fetchActivities(modalPage-1, 10, activityFilters); }}>Anterior</Button>
-             <span>{modalPage} / {activityMeta?.totalPages || 1}</span>
-             <Button size="sm" variant="ghost" disabled={modalPage >= (activityMeta?.totalPages || 1)} onClick={() => { setModalPage(modalPage+1); fetchActivities(modalPage+1, 10, activityFilters); }}>Siguiente</Button>
+            <Button size="sm" variant="ghost" disabled={modalPage <= 1} onClick={() => { setModalPage(modalPage - 1); fetchActivities(modalPage - 1, 10, activityFilters); }}>Anterior</Button>
+            <span>{modalPage} / {activityMeta?.totalPages || 1}</span>
+            <Button size="sm" variant="ghost" disabled={modalPage >= (activityMeta?.totalPages || 1)} onClick={() => { setModalPage(modalPage + 1); fetchActivities(modalPage + 1, 10, activityFilters); }}>Siguiente</Button>
           </div>
         </div>
       </Modal>
