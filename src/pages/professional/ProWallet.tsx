@@ -491,11 +491,11 @@ export default function ProWallet() {
             <table className="pw-audit-table">
               <thead>
                 <tr>
-                  <th>Fecha</th>
-                  <th>Descripción</th>
-                  <th className="text-right">Precio servicio</th>
-                  <th className="text-right">Comisión / Monto</th>
-                  <th className="text-right">Saldo</th>
+                  <th className="pw-th-date">Fecha</th>
+                  <th className="pw-th-desc">Descripción</th>
+                  <th className="pw-th-price text-right">Precio servicio</th>
+                  <th className="pw-th-amount text-right">Comisión / Monto</th>
+                  <th className="pw-th-balance text-right">Saldo</th>
                 </tr>
               </thead>
               <tbody>
@@ -510,10 +510,10 @@ export default function ProWallet() {
                       transition={{ delay: 0.04 * idx }}
                       className={`pw-audit-row ${credit ? 'row-credit' : commission ? 'row-commission' : ''}`}
                     >
-                      <td className="pw-audit-date">
+                      <td className="pw-audit-date" data-label="Fecha">
                         {new Date(tx.createdAt).toLocaleDateString(i18n.language, { day: '2-digit', month: '2-digit', year: 'numeric' })}
                       </td>
-                      <td className="pw-audit-desc">
+                      <td className="pw-audit-desc" data-label="Descripción">
                         <div className="pw-audit-desc-inner">
                           <div className={`pw-audit-dot ${credit ? 'dot-green' : commission ? 'dot-purple' : 'dot-gray'}`} />
                           <div>
@@ -524,16 +524,16 @@ export default function ProWallet() {
                           </div>
                         </div>
                       </td>
-                      <td className="pw-audit-service text-right">
+                      <td className="pw-audit-service text-right" data-label="Precio servicio">
                         {tx.serviceAmount ? formatCOP(tx.serviceAmount) : '—'}
                       </td>
-                      <td className={`pw-audit-amount text-right ${credit ? 'amount-credit' : 'amount-debit'}`}>
+                      <td className={`pw-audit-amount text-right ${credit ? 'amount-credit' : 'amount-debit'}`} data-label="Monto">
                         {credit ? '+' : ''}{formatCOP(tx.amount)}
                         {commission && tx.commissionPercentage && (
                           <span className="pw-audit-pct">({(Number(tx.commissionPercentage) * 100).toFixed(0)}%)</span>
                         )}
                       </td>
-                      <td className="pw-audit-balance text-right">
+                      <td className="pw-audit-balance text-right" data-label="Saldo">
                         {tx.balanceAfter !== null && tx.balanceAfter !== undefined
                           ? formatCOP(tx.balanceAfter)
                           : '—'}
@@ -738,11 +738,11 @@ export default function ProWallet() {
                   <table className="pw-audit-table">
                     <thead>
                       <tr>
-                        <th>Fecha</th>
-                        <th>Descripción</th>
-                        <th className="text-right">Precio servicio</th>
-                        <th className="text-right">Comisión / Monto</th>
-                        <th className="text-right">Saldo tras mov.</th>
+                        <th className="pw-th-date">Fecha</th>
+                        <th className="pw-th-desc">Descripción</th>
+                        <th className="pw-th-price text-right">Precio servicio</th>
+                        <th className="pw-th-amount text-right">Comisión / Monto</th>
+                        <th className="pw-th-balance text-right">Saldo tras mov.</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -751,10 +751,10 @@ export default function ProWallet() {
                         const commission = tx.type === 'COMMISSION';
                         return (
                           <tr key={tx.id} className={`pw-audit-row ${credit ? 'row-credit' : commission ? 'row-commission' : ''}`}>
-                            <td className="pw-audit-date">
+                            <td className="pw-audit-date" data-label="Fecha">
                               {new Date(tx.createdAt).toLocaleDateString(i18n.language, { day: '2-digit', month: '2-digit', year: 'numeric' })}
                             </td>
-                            <td className="pw-audit-desc">
+                            <td className="pw-audit-desc" data-label="Descripción">
                               <div className="pw-audit-desc-inner">
                                 <div className={`pw-audit-dot ${credit ? 'dot-green' : commission ? 'dot-purple' : 'dot-gray'}`} />
                                 <div>
@@ -763,16 +763,16 @@ export default function ProWallet() {
                                 </div>
                               </div>
                             </td>
-                            <td className="pw-audit-service text-right">
+                            <td className="pw-audit-service text-right" data-label="Precio servicio">
                               {tx.serviceAmount ? formatCOP(tx.serviceAmount) : '—'}
                             </td>
-                            <td className={`pw-audit-amount text-right ${credit ? 'amount-credit' : 'amount-debit'}`}>
+                            <td className={`pw-audit-amount text-right ${credit ? 'amount-credit' : 'amount-debit'}`} data-label="Monto">
                               {credit ? '+' : ''}{formatCOP(tx.amount)}
                               {commission && tx.commissionPercentage && (
                                 <span className="pw-audit-pct">({(Number(tx.commissionPercentage) * 100).toFixed(0)}%)</span>
                               )}
                             </td>
-                            <td className="pw-audit-balance text-right">
+                            <td className="pw-audit-balance text-right" data-label="Saldo">
                               {tx.balanceAfter !== null && tx.balanceAfter !== undefined ? formatCOP(tx.balanceAfter) : '—'}
                             </td>
                           </tr>

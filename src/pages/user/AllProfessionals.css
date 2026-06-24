@@ -1,0 +1,192 @@
+/* ============================================
+   AllProfessionals Screen
+   Uses existing design tokens from index.css
+   ============================================ */
+
+.all-pros-page {
+  padding: var(--space-4);
+  max-width: 900px;
+  margin: 0 auto;
+  min-height: 60vh;
+}
+
+@media (min-width: 1024px) {
+  .all-pros-page {
+    padding: var(--space-6);
+  }
+}
+
+/* Header */
+.all-pros-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-bottom: var(--space-6);
+}
+
+.all-pros-back {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-lg);
+  background: var(--neutral-100);
+  color: var(--neutral-700);
+  transition: all var(--transition-fast);
+  flex-shrink: 0;
+}
+
+.all-pros-back:hover {
+  background: var(--primary-50);
+  color: var(--primary-600);
+}
+
+.all-pros-title-group {
+  flex: 1;
+}
+
+.all-pros-title-group h1 {
+  font-size: var(--text-xl);
+  margin-bottom: 2px;
+}
+
+.all-pros-title-group p {
+  font-size: var(--text-sm);
+  color: var(--neutral-400);
+}
+
+/* Grid */
+.all-pros-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-4);
+}
+
+@media (min-width: 768px) {
+  .all-pros-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 479px) {
+  .all-pros-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Reuse pro-card-home styles but adapt for grid */
+.all-pros-grid .pro-card-home {
+  min-width: unset;
+  width: 100%;
+}
+
+/* Skeleton Cards */
+.skeleton-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-4);
+}
+
+@media (min-width: 768px) {
+  .skeleton-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 479px) {
+  .skeleton-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.skeleton-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-5);
+  border-radius: var(--radius-xl);
+  background: var(--neutral-0);
+  border: 1px solid var(--neutral-100);
+}
+
+.skeleton-avatar {
+  width: 64px;
+  height: 64px;
+  border-radius: var(--radius-full);
+}
+
+.skeleton-name {
+  width: 70%;
+  height: 14px;
+}
+
+.skeleton-rating {
+  width: 50%;
+  height: 12px;
+}
+
+.skeleton-tags {
+  display: flex;
+  gap: var(--space-1);
+  justify-content: center;
+}
+
+.skeleton-tag {
+  width: 48px;
+  height: 18px;
+  border-radius: var(--radius-full);
+}
+
+.skeleton-meta {
+  width: 80%;
+  height: 12px;
+}
+
+/* Empty State */
+.all-pros-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: var(--space-12) var(--space-4);
+  color: var(--neutral-400);
+  gap: var(--space-3);
+}
+
+.all-pros-empty-icon {
+  width: 64px;
+  height: 64px;
+  border-radius: var(--radius-full);
+  background: var(--neutral-100);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--neutral-300);
+}
+
+.all-pros-empty h3 {
+  font-size: var(--text-lg);
+  color: var(--neutral-600);
+}
+
+.all-pros-empty p {
+  font-size: var(--text-sm);
+  max-width: 320px;
+}
+
+/* Load more / infinite scroll trigger */
+.all-pros-load-more {
+  display: flex;
+  justify-content: center;
+  padding: var(--space-6) 0;
+}
+
+.all-pros-count {
+  text-align: center;
+  font-size: var(--text-xs);
+  color: var(--neutral-400);
+  padding-top: var(--space-2);
+}

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Calendar, Clock, MapPin, Home, Building, Check, ArrowLeft, ArrowRight, Loader } from 'lucide-react';
@@ -95,17 +95,36 @@ export default function Booking() {
 
   const timeSlots = getTimeSlots();
 
+  // Convert 12h time ("9:00 AM") to 24h ("09:00") for backend
+  const convertTo24h = useCallback((time12h: string): string => {
+    if (!time12h) return '00:00';
+    // Already 24h format (HH:MM)
+    if (!time12h.includes('AM') && !time12h.includes('PM')) return time12h;
+    const [time, modifier] = time12h.split(' ');
+    let [hours, minutes] = time.split(':');
+    if (modifier === 'PM' && hours !== '12') hours = String(parseInt(hours, 10) + 12);
+    if (modifier === 'AM' && hours === '12') hours = '00';
+    return `${hours.padStart(2, '0')}:${minutes}`;
+  }, []);
+
   const handleConfirm = async () => {
     if (!pro) return;
+
+    // Validate that we have a real professionalServiceId
+    if (!selectedSvc?.id) {
+      notify('error', t('booking.errorTitle'), t('booking.errorNoService', 'Por favor selecciona un servicio para continuar.'));
+      setLoading(false);
+      return;
+    }
+
     setLoading(true);
     try {
       const booking = await bookingService.createBooking({
         professionalId: parseInt(pro.id),
-        professionalServiceId: selectedSvc?.id ? parseInt(selectedSvc.id) : 1,
+        professionalServiceId: parseInt(String(selectedSvc.id)),
         date: selectedDate,
-        startTime: selectedTime,
+        startTime: convertTo24h(selectedTime),
         locationType: locationType,
-        price: selectedSvc?.price || pro.price || 0,
       } as any);
 
       // Try payment if available
@@ -213,7 +232,7 @@ export default function Booking() {
                       <h3>{svcName}</h3>
                       <span className="svc-dur"><Clock size={13} /> {svc.duration || 30} {t('booking.min')}</span>
                     </div>
-                    <span className="svc-price">${svc.price || 0}</span>
+                    <span className="svc-price">{new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 }).format(Number(svc.price) || 0)}</span>
                   </Card>
                 );
               })}
@@ -310,7 +329,7 @@ export default function Booking() {
               </div>
               <div className="confirm-price-row">
                 <span>{t('booking.estPrice')}</span>
-                <span className="confirm-total">${selectedSvc?.price || pro.price || 0}</span>
+                <span className="confirm-total">{new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 }).format(Number(selectedSvc?.price || pro.price) || 0)}</span>
               </div>
             </Card>
           </motion.div>

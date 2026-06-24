@@ -101,7 +101,10 @@
 }
 .admin-transaction-icon.payment { background: #f0fdf4; color: #22c55e; }
 .admin-transaction-icon.payout { background: #fef2f2; color: #ef4444; }
-.admin-transaction-icon.commission { background: #eff6ff; color: #3b82f6; }
+.admin-transaction-icon.commission { background: #f0fdf4; color: #22c55e; }
+.admin-transaction-icon.top_up { background: #eff6ff; color: #3b82f6; }
+.admin-transaction-icon.bonus { background: #faf5ff; color: #a855f7; }
+.admin-transaction-icon.refund { background: #fef2f2; color: #ef4444; }
 
 .admin-amount { 
   font-family: var(--font-display); 

@@ -8,11 +8,18 @@ export interface Appointment {
   status: 'pending' | 'confirmed' | 'completed' | 'cancelled';
   clientName: string;
   clientAvatar?: string;
+  clientEmail?: string;
+  clientPhone?: string;
+  clientBio?: string;
   serviceName: string;
+  serviceDescription?: string;
   date: string;
   startTime: string;
   price: number;
+  paymentMethod?: string;
+  paymentStatus?: string;
   locationType: 'home' | 'professional';
+  locationAddress?: string;
   raw?: any; // For any extra data
 }
 
@@ -35,13 +42,20 @@ export function useAppointments(professionalId: string | number | null) {
       status: b.status,
       clientName,
       clientAvatar: b.user?.avatar || b.client?.avatar,
+      clientEmail: b.user?.email || b.client?.email,
+      clientPhone: b.user?.phone || b.client?.phone,
+      clientBio: b.user?.bio || b.client?.bio,
       serviceName: b.professionalService?.service?.name || b.service?.name || b.serviceName || t('proDash.service', 'Servicio'),
+      serviceDescription: b.professionalService?.description || b.service?.description,
       date: b.date
         ? (typeof b.date === 'string' ? b.date.split('T')[0] : new Date(b.date).toISOString().split('T')[0])
         : (b.scheduledAt ? new Date(b.scheduledAt).toISOString().split('T')[0] : ''),
       startTime: b.startTime || (b.scheduledAt ? new Date(b.scheduledAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''),
       price: b.price ? parseFloat(b.price) : 0,
+      paymentMethod: b.paymentMethod || b.payment?.method || (b.walletAmount > 0 ? 'Wallet' : 'Cash/Other'),
+      paymentStatus: b.paymentStatus || b.payment?.status || 'pending',
       locationType: b.locationType || 'professional',
+      locationAddress: b.location?.address || b.address,
       raw: b
     };
   }, [t]);

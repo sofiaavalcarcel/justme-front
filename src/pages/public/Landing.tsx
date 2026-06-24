@@ -1,23 +1,78 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Star, Verified, CreditCard, ArrowRight, Sparkles, Menu, X } from 'lucide-react';
 
 import { Button, ThemeToggle, LanguageToggle } from '../../components/ui';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../context/AuthContext';
+import { professionalsService } from '../../services/professionalsService';
 import './Landing.css';
 import videoo from '../../assets/imagenes/videoo.mp4';
 import senora1 from '../../assets/imagenes/señora_1.png';
-import senora2 from '../../assets/imagenes/señora_2.png';
-import senora3 from '../../assets/imagenes/señora_3.png';
-import senora4 from '../../assets/imagenes/señora_4.png';
 import senora6 from '../../assets/imagenes/señora_6.png';
+
+interface TopProfessional {
+  id: number;
+  averageRating: number;
+  reviewCount: number;
+  bio?: string;
+  user: { name: string; lastName: string; profileImage?: string };
+  professionalServices?: { price: number; isActive: boolean; service?: { name: string; category?: string } }[];
+}
+
+const FALLBACK_PROFESSIONALS: TopProfessional[] = [
+  {
+    id: 1,
+    averageRating: 4.9,
+    reviewCount: 124,
+    user: { name: 'Elena', lastName: 'Martínez', profileImage: undefined },
+    professionalServices: [
+      { price: 85000, isActive: true, service: { name: 'HydraFacial', category: 'Faciales & Skincare' } },
+      { price: 65000, isActive: true, service: { name: 'Peeling', category: 'Faciales & Skincare' } },
+    ],
+  },
+  {
+    id: 2,
+    averageRating: 5.0,
+    reviewCount: 98,
+    user: { name: 'Marcus', lastName: 'Vance', profileImage: undefined },
+    professionalServices: [
+      { price: 120000, isActive: true, service: { name: 'Balayage', category: 'Hair Stylist & Color' } },
+      { price: 80000, isActive: true, service: { name: 'Tratamientos', category: 'Hair Stylist & Color' } },
+    ],
+  },
+  {
+    id: 3,
+    averageRating: 4.8,
+    reviewCount: 76,
+    user: { name: 'Sofia', lastName: 'Rossi', profileImage: undefined },
+    professionalServices: [
+      { price: 65000, isActive: true, service: { name: 'Gelish', category: 'Manicura & Masajes' } },
+      { price: 55000, isActive: true, service: { name: 'Relajante', category: 'Manicura & Masajes' } },
+    ],
+  },
+];
 
 export default function Landing() {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const { openLoginModal } = useAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [topProfessionals, setTopProfessionals] = useState<TopProfessional[]>(FALLBACK_PROFESSIONALS);
+  const [proLoading, setProLoading] = useState(false);
+
+  useEffect(() => {
+    professionalsService.getTopProfessionals(3, 0)
+      .then((res: any) => {
+        const list = Array.isArray(res) ? res : (res?.data ?? []);
+        if (list.length > 0) {
+          setTopProfessionals(list.slice(0, 3));
+        }
+        // if empty, keep fallback data
+      })
+      .catch(() => { /* keep fallback data */ })
+      .finally(() => setProLoading(false));
+  }, []);
 
   return (
     <div className={`landing ${isMenuOpen ? 'menu-open' : ''}`}>
@@ -37,10 +92,6 @@ export default function Landing() {
           </nav>
 
           <div className="nav-actions">
-            <div className="desktop-actions">
-              <LanguageToggle size="sm" />
-            </div>
-            <ThemeToggle size="sm" />
             <Button variant="ghost" size="sm" onClick={openLoginModal} id="landing-signin-btn">{t('nav.signIn')}</Button>
             <Button variant="primary" size="sm" onClick={() => navigate('/register')}>{t('nav.getStarted')}</Button>
 
@@ -65,11 +116,19 @@ export default function Landing() {
                 <span>Idioma</span>
                 <LanguageToggle size="md" />
               </div>
-              <Button variant="primary" className="w-full" onClick={() => navigate('/register')}>{t('nav.getStarted')}</Button>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                <Button variant="ghost" className="w-full" onClick={() => { setIsMenuOpen(false); openLoginModal(); }}>{t('nav.signIn')}</Button>
+                <Button variant="primary" className="w-full" onClick={() => navigate('/register')}>{t('nav.getStarted')}</Button>
+              </div>
             </div>
           </nav>
         </div>
       </header>
+
+      {/* Floating Theme Toggle */}
+      <div className="floating-theme-toggle">
+        <ThemeToggle size="md" />
+      </div>
 
       <main className="lux-main">
         {/* Hero Section */}
@@ -159,36 +218,73 @@ export default function Landing() {
                 <h2>Profesionales Destacados</h2>
                 <p>Reserva con los favoritos de nuestra comunidad esta semana.</p>
               </div>
-              <button className="lux-see-all">Ver todos <ArrowRight size={20} /></button>
+              <button className="lux-see-all" onClick={openLoginModal}>Ver todos <ArrowRight size={20} /></button>
             </div>
 
             <div className="lux-prof-grid">
-              {[
-                { name: 'Elena Martinez', role: 'Especialista en Faciales & Skincare', img: senora2, price: '$85/sesión', score: '4.9', tags: ['HydraFacial', 'Peeling'] },
-                { name: 'Marcus Vance', role: 'Hair Stylist & Color Metry', img: senora3, price: '$120/sesión', score: '5.0', tags: ['Balayage', 'Tratamientos'] },
-                { name: 'Sofia Rossi', role: 'Manicurista & Masoterapeuta', img: senora4, price: '$65/sesión', score: '4.8', tags: ['Gelish', 'Relajante'] }
-              ].map((p, i) => (
-
-                <div key={i} className="lux-prof-card">
-                  <div className="lux-prof-img">
-                    <img src={p.img} alt={p.name} />
-                    <div className="lux-prof-price">{p.price}</div>
-                  </div>
-                  <div className="lux-prof-info">
-                    <div className="lux-prof-title">
-                      <div>
-                        <h3>{p.name}</h3>
-                        <p>{p.role}</p>
+              {proLoading
+                ? Array.from({ length: 3 }).map((_, i) => (
+                    <div key={i} className="lux-prof-card lux-prof-skeleton">
+                      <div className="lux-prof-img lux-skeleton-img" />
+                      <div className="lux-prof-info">
+                        <div className="lux-skeleton-line" style={{ width: '60%', height: '1.2rem', marginBottom: '0.5rem' }} />
+                        <div className="lux-skeleton-line" style={{ width: '80%', height: '0.85rem', marginBottom: '1rem' }} />
+                        <div className="lux-skeleton-line" style={{ width: '100%', height: '2.5rem', borderRadius: '12px' }} />
                       </div>
-                      <div className="lux-score"><Star size={14} fill="currentColor" /> {p.score}</div>
                     </div>
-                    <div className="lux-tags">
-                      {p.tags.map(t => <span key={t}>{t}</span>)}
-                    </div>
-                    <Button className="w-full">Reservar con {p.name.split(' ')[0]}</Button>
-                  </div>
-                </div>
-              ))}
+                  ))
+                : topProfessionals.length > 0
+                  ? topProfessionals.map((p) => {
+                      const firstName = p.user?.name ?? 'Pro';
+                      const fullName = `${p.user?.name ?? ''} ${p.user?.lastName ?? ''}`.trim();
+                      const activeServices = (p.professionalServices ?? []).filter(s => s.isActive);
+                      const minPrice = activeServices.length > 0
+                        ? Math.min(...activeServices.map(s => Number(s.price)))
+                        : null;
+                      const priceLabel = minPrice !== null
+                        ? `Desde $${minPrice.toLocaleString('es-CO')}`
+                        : 'Precio a consultar';
+                      const tags = [...new Set(
+                        activeServices.slice(0, 2).map(s => s.service?.name ?? s.service?.category ?? '').filter(Boolean)
+                      )];
+                      const rating = p.averageRating ? parseFloat(String(p.averageRating)).toFixed(1) : 'N/A';
+                      const avatarUrl = p.user?.profileImage;
+                      const role = activeServices[0]?.service?.category ?? activeServices[0]?.service?.name ?? 'Profesional de belleza';
+
+                      return (
+                        <div key={p.id} className="lux-prof-card">
+                          <div className="lux-prof-img">
+                            {avatarUrl
+                              ? <img src={avatarUrl} alt={fullName} />
+                              : <div className="lux-prof-avatar-fallback">{firstName.charAt(0).toUpperCase()}</div>
+                            }
+                            <div className="lux-prof-price">{priceLabel}</div>
+                          </div>
+                          <div className="lux-prof-info">
+                            <div className="lux-prof-title">
+                              <div>
+                                <h3>{fullName}</h3>
+                                <p>{role}</p>
+                              </div>
+                              <div className="lux-score"><Star size={14} fill="currentColor" /> {rating}</div>
+                            </div>
+                            <div className="lux-tags">
+                              {tags.length > 0
+                                ? tags.map(tag => <span key={tag}>{tag}</span>)
+                                : <span>Servicios disponibles</span>
+                              }
+                            </div>
+                            <Button className="w-full" onClick={openLoginModal}>Reservar con {firstName}</Button>
+                          </div>
+                        </div>
+                      );
+                    })
+                  : (
+                      <div style={{ gridColumn: '1 / -1', textAlign: 'center', color: '#9ca3af', padding: '3rem 0' }}>
+                        <p>No hay profesionales disponibles en este momento.</p>
+                      </div>
+                    )
+              }
             </div>
           </div>
         </section>

@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { MapPin, Clock, Star, CheckCircle, ChevronRight, Calendar, DollarSign, Loader } from 'lucide-react';
+import { MapPin, Clock, Star, CheckCircle, ChevronRight, Calendar, DollarSign, Loader, Heart } from 'lucide-react';
 import { Button, Avatar, Rating, Card, Badge } from '../../components/ui';
 import { professionalsService } from '../../services/professionalsService';
+import { userService } from '../../services/userService';
 
 import { useTranslation } from 'react-i18next';
 import './ProfessionalProfile.css';
@@ -16,6 +17,7 @@ export default function ProfessionalProfile() {
   const [reviews, setReviews] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isFav, setIsFav] = useState(false);
   const { t } = useTranslation();
   
   const formatCOP = (val: number | string) => {
@@ -41,6 +43,11 @@ export default function ProfessionalProfile() {
         setPro(proData);
         setServices(Array.isArray(svcData) ? svcData : (svcData?.data || []));
         setReviews(Array.isArray(revData) ? revData : []);
+        
+        if (id) {
+          const favStatus = await userService.isFavorite(parseInt(id));
+          setIsFav(!!favStatus);
+        }
       } catch (err: any) {
         console.error('Failed to load professional profile', err);
         setError(t('proProfile.errorLoad'));
@@ -68,6 +75,16 @@ export default function ProfessionalProfile() {
     );
   }
 
+  const handleToggleFavorite = async () => {
+    if (!id) return;
+    try {
+      const res = await userService.toggleFavorite(parseInt(id));
+      setIsFav(res.isFavorite);
+    } catch (e) {
+      console.error('Error toggling favorite:', e);
+    }
+  };
+
   const proName = pro.name || pro.user?.name || 'Professional';
   const proAvatar = pro.avatar || pro.photoUrl || pro.user?.avatar;
   const proRating = pro.rating || 0;
@@ -88,9 +105,29 @@ export default function ProfessionalProfile() {
         <div className="pro-hero-content">
           <Avatar src={proAvatar} name={proName} size="xl" />
           <div className="pro-hero-info">
-            <div className="pro-hero-name">
+            <div className="pro-hero-name" style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
               <h1>{proName}</h1>
               {proVerified && <Badge variant="success" size="md"><CheckCircle size={12} /> {t('proProfile.verified')}</Badge>}
+              <button
+                onClick={handleToggleFavorite}
+                style={{
+                  background: 'rgba(255, 255, 255, 0.15)',
+                  border: 'none',
+                  borderRadius: '50%',
+                  cursor: 'pointer',
+                  padding: '8px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: isFav ? '#ef4444' : '#ffffff',
+                  transition: 'all 0.2s ease',
+                  backdropFilter: 'blur(4px)',
+                }}
+                className="fav-toggle-btn"
+                title={isFav ? t('proProfile.removeFavorite', 'Quitar de favoritos') : t('proProfile.addFavorite', 'Agregar a favoritos')}
+              >
+                <Heart size={20} fill={isFav ? 'currentColor' : 'none'} />
+              </button>
             </div>
             <Rating value={proRating} size="md" showValue count={proReviewCount} />
             <div className="pro-hero-meta">

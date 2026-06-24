@@ -7,7 +7,7 @@ interface User {
   email: string;
   role: UserRole;
   profileImage?: string;
-  firstName: string;
+  name: string;
   lastName: string;
 }
 

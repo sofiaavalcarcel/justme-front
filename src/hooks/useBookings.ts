@@ -1,5 +1,6 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { apiClient } from '../services/api';
+import { useNotification } from '../context/NotificationContext';
 
 export interface Booking {
   id: string | number;
@@ -13,19 +14,21 @@ export interface Booking {
   startTime?: string;
   price: number;
   locationType: string;
+  review?: any;
 }
 
 export function useBookings() {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { notify } = useNotification();
+  const bookingsRef = useRef<Booking[]>([]);
 
-  const fetchBookings = useCallback(async () => {
-    setLoading(true);
+  const fetchBookings = useCallback(async (isPolling = false) => {
+    if (!isPolling) setLoading(true);
     try {
       const response = await apiClient.get('/bookings');
       
-      // El endpoint devuelve arreglo o objeto con data.
       const rawData = Array.isArray(response.data) ? response.data : (response.data?.data || []);
       
       const mapped: Booking[] = rawData.map((item: any) => {
@@ -44,19 +47,35 @@ export function useBookings() {
           startTime: item.startTime,
           price: item.price ? parseFloat(item.price) : 0,
           locationType: item.locationType || 'professional',
+          review: item.review,
         };
       });
       
+      // Change Detection for Polling
+      if (isPolling && bookingsRef.current.length > 0) {
+        const oldList = bookingsRef.current;
+        mapped.forEach(nb => {
+          const old = oldList.find(ob => ob.id === nb.id);
+          if (old && old.status !== nb.status) {
+            notify('info', 'Estado de Cita', `Tu cita para ${nb.service} ha cambiado a: ${nb.status}`);
+          }
+        });
+      }
+
+      bookingsRef.current = mapped;
       setBookings(mapped);
     } catch (err: any) {
       setError(err.response?.data?.message || 'Error al obtener tus citas.');
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [notify]);
 
   useEffect(() => {
     fetchBookings();
+    // Poll every 45 seconds for users (lower frequency than pros)
+    const interval = setInterval(() => fetchBookings(true), 45000);
+    return () => clearInterval(interval);
   }, [fetchBookings]);
 
   return { bookings, loading, error, refetch: fetchBookings };

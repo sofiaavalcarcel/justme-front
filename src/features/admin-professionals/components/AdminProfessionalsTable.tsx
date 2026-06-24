@@ -117,11 +117,14 @@ export function AdminProfessionalsTable() {
                             size="md" 
                           />
                           <div>
-                            <p style={{ fontWeight: 600, color: 'var(--neutral-900)', fontSize: 'var(--text-sm)' }}>
+                            <p style={{ fontWeight: 600, color: 'var(--neutral-900)', fontSize: 'var(--text-sm)', margin: 0 }}>
                               {pro.user?.name || pro.name} {pro.user?.lastName || pro.lastName}
                             </p>
-                            <p style={{ fontSize: 'var(--text-xs)', color: 'var(--neutral-500)' }}>
+                            <p style={{ fontSize: 'var(--text-xs)', color: 'var(--neutral-500)', margin: 0 }}>
                               {pro.user?.email || pro.email}
+                            </p>
+                            <p style={{ fontSize: 'var(--text-xs)', color: 'var(--neutral-400)', fontFamily: 'monospace', margin: 0 }}>
+                              User ID: {pro.user?.id || '—'} · Pro ID: {pro.id}
                             </p>
                           </div>
                         </div>

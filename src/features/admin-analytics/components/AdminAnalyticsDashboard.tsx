@@ -121,11 +121,11 @@ export function AdminAnalyticsDashboard() {
       {/* Main Metrics */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 'var(--space-4)' }}>
         <MetricCard 
-          title="Revenue" 
-          value={formatCurrency(summary?.totalRevenue || 0)} 
+          title="Comisiones" 
+          value={formatCurrency(summary?.commissionsCollected || 0)} 
           icon={<DollarSign size={24} />} 
           trend={12} 
-          color="#ef4444" 
+          color="var(--success-500)" 
           delay={0.1}
         />
         <MetricCard 
@@ -159,8 +159,8 @@ export function AdminAnalyticsDashboard() {
         <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.5 }}>
           <Card variant="glass" padding="lg" style={{ height: '100%', border: '1px solid var(--neutral-200)' }}>
             <SectionHeader 
-              title="Revenue Growth" 
-              subtitle="Monthly performance in COP" 
+              title="Crecimiento de Comisiones" 
+              subtitle="Comisiones mensuales en COP" 
               icon={TrendingUp} 
             />
             <div style={{ width: '100%', height: 350 }}>
@@ -168,8 +168,8 @@ export function AdminAnalyticsDashboard() {
                 <AreaChart data={revenue}>
                   <defs>
                     <linearGradient id="colorRev" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="var(--primary-500)" stopOpacity={0.3}/>
-                      <stop offset="95%" stopColor="var(--primary-500)" stopOpacity={0}/>
+                      <stop offset="5%" stopColor="var(--success-500)" stopOpacity={0.3}/>
+                      <stop offset="95%" stopColor="var(--success-500)" stopOpacity={0}/>
                     </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--neutral-100)" />
@@ -177,9 +177,9 @@ export function AdminAnalyticsDashboard() {
                   <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: 'var(--neutral-400)' }} tickFormatter={(val) => `$${val/1000}k`} />
                   <Tooltip 
                     contentStyle={{ borderRadius: 'var(--radius-lg)', border: 'none', boxShadow: 'var(--shadow-lg)', background: 'rgba(255,255,255,0.9)', backdropFilter: 'blur(10px)' }}
-                    formatter={(val: any) => [formatCurrency(Number(val)), 'Revenue']}
+                    formatter={(val: any) => [formatCurrency(Number(val)), 'Comisiones']}
                   />
-                  <Area type="monotone" dataKey="revenue" stroke="var(--primary-500)" strokeWidth={3} fillOpacity={1} fill="url(#colorRev)" />
+                  <Area type="monotone" dataKey="revenue" stroke="var(--success-500)" strokeWidth={3} fillOpacity={1} fill="url(#colorRev)" />
                 </AreaChart>
               </ResponsiveContainer>
             </div>
