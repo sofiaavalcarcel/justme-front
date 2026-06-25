@@ -1,6 +1,7 @@
 // trigger Vite HMR
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate, Link, useSearchParams } from 'react-router-dom';
+import axios from 'axios';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Mail, Lock, Eye, EyeOff, ArrowRight, Sparkles, AlertCircle } from 'lucide-react';
 import { Button, Input } from '../../components/ui';
@@ -11,6 +12,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useNotification } from '../../context/NotificationContext';
 import { validateEmail, validatePassword } from '../../utils/validators';
 import { resolvePostLoginDashboard } from '../../utils/roleRedirect';
+import { GOOGLE_AUTH_URL } from '../../config/api';
 import './Login.css';
 
 export default function Login() {
@@ -40,10 +42,10 @@ export default function Login() {
           await loginWithToken(token, roleParam);
           
           // After loginWithToken, role state is already updated in context
-          const dashboardPath = resolvePostLoginDashboard([{ id: 0, name: role || 'user' }]);
+          const dashboardPath = resolvePostLoginDashboard([{ id: 0, name: roleParam || 'user' }]);
           notify('success', 'Bienvenido de nuevo!', 'Sesión iniciada correctamente.');
           navigate(dashboardPath);
-        } catch (err: any) {
+        } catch {
           setApiError('Error al iniciar sesión con Google.');
         } finally {
           setLoading(false);
@@ -89,16 +91,20 @@ export default function Login() {
       const dashboardPath = resolvePostLoginDashboard([{ id: 0, name: role || 'user' }]);
       notify('success', 'Bienvenido de nuevo!', 'Sesión iniciada correctamente.');
       navigate(dashboardPath);
-    } catch (err: any) {
-      const msg = err.response?.data?.message || 'Credenciales inválidas.';
-      setApiError(typeof msg === 'string' ? msg : msg[0]);
+    } catch (err: unknown) {
+      let message = 'Credenciales inválidas.';
+      if (axios.isAxiosError(err)) {
+        const msg = err.response?.data?.message;
+        if (msg) message = typeof msg === 'string' ? msg : msg[0];
+      }
+      setApiError(message);
     } finally {
       setLoading(false);
     }
   };
 
   const handleGoogleLogin = () => {
-    window.location.href = `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/auth/google`;
+    window.location.href = GOOGLE_AUTH_URL;
   };
 
   return (

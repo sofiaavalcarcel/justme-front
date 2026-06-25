@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../context/AuthContext';
 import { useNotification } from '../../context/NotificationContext';
 import { validateEmail, validatePassword } from '../../utils/validators';
+import { GOOGLE_AUTH_URL } from '../../config/api';
 import './LoginModal.css';
 
 interface LoginModalProps {
@@ -145,7 +146,7 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
   };
 
   const handleGoogleLogin = () => {
-    window.location.href = `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/auth/google`;
+    window.location.href = GOOGLE_AUTH_URL;
   };
 
   if (!isOpen && !closing) return null;
