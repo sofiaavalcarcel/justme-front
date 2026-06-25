@@ -13,6 +13,7 @@ import { walletService } from '../services/walletService';
 import { userService } from '../services/userService';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
+import { API_BASE_URL } from '../config/api';
 import { MapView } from '../components/map/MapView';
 import { Navigation } from 'lucide-react';
 import Swal from 'sweetalert2';
@@ -334,7 +335,7 @@ export function ProPortfolio() {
   const [uploading, setUploading] = React.useState(false);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
-  const baseUrl = (import.meta.env.VITE_API_URL || 'http://localhost:3000/api').replace('/api', '');
+  const baseUrl = API_BASE_URL;
 
   const fetchImages = React.useCallback(async () => {
     if (!professionalId) return;

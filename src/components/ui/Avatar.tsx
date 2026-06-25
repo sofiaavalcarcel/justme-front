@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { resolveAssetUrl } from '../../config/api';
 import './Avatar.css';
 
 interface AvatarProps {
@@ -13,18 +14,7 @@ export function Avatar({ src, name, size = 'md', status, className = '' }: Avata
   const [error, setError] = useState(false);
   const initials = name ? name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() : '?';
 
-  const getImageUrl = (url?: string) => {
-    if (!url) return '';
-    if (url.startsWith('http') || url.startsWith('blob:') || url.startsWith('data:')) return url;
-    
-    // Clean path and ensure it starts with /
-    const cleanUrl = url.replace(/^\/?api\//, '/');
-    const finalPath = cleanUrl.startsWith('/') ? cleanUrl : `/${cleanUrl}`;
-
-    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
-    const hostBase = apiUrl.split('/api')[0];
-    return `${hostBase}${finalPath}`;
-  };
+  const getImageUrl = (url?: string) => resolveAssetUrl(url);
 
   const finalSrc = src ? getImageUrl(src) : null;
 

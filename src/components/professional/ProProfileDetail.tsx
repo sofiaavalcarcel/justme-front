@@ -5,7 +5,7 @@ import {
   Briefcase, Image, MessageSquare, X, CheckCircle,
   Quote
 } from 'lucide-react';
-import { API_URL } from '../../config/api';
+import { resolveAssetUrl } from '../../config/api';
 import './ProProfileDetail.css';
 
 interface ProProfileDetailProps {
@@ -18,18 +18,7 @@ type Tab = 'services' | 'portfolio' | 'reviews';
 export const ProProfileDetail: React.FC<ProProfileDetailProps> = ({ professional, onBack }) => {
   const [activeTab, setActiveTab] = useState<Tab>('services');
 
-  // Formatting Image URL safely
-  const getImageUrl = (url?: string) => {
-    if (!url) return '';
-    if (url.startsWith('http')) return url;
-    try {
-      const apiUrlObj = new URL(API_URL);
-      return `${apiUrlObj.protocol}//${apiUrlObj.host}${url.startsWith('/') ? url : '/' + url}`;
-    } catch {
-      const fallback = API_URL.replace(/\/api\/?$/, '');
-      return `${fallback}${url.startsWith('/') ? url : '/' + url}`;
-    }
-  };
+  const getImageUrl = (url?: string) => resolveAssetUrl(url);
 
   const activeServices = professional.professionalServices?.filter((ps: any) => ps.isActive !== false) || [];
   const topReviews = professional.reviews?.slice(0, 5) || [];
