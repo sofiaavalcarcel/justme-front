@@ -1,8 +1,9 @@
 import axios, { AxiosError } from 'axios';
+import { API_TIMEOUT, API_URL } from '../../config/api';
 
 export const apiClient = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:3000/api',
-  timeout: 10000,
+  baseURL: API_URL,
+  timeout: API_TIMEOUT,
   headers: {
     'Content-Type': 'application/json',
   },
